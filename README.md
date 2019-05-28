@@ -1,2 +1,2 @@
 # moonbeam-bot
-testing
+test
