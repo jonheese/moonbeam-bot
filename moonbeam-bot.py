@@ -120,20 +120,47 @@ if __name__ == "__main__":
                                     action = command[0]
                                     if action == "roll":
                                         dices = command[1:]
-                                        pad = "                    "
-                                        summary = "*Dice*%s*Rolls*" % pad
+                                        summary = "*Dice*    \t\t\t\t*Rolls*"
                                         total = 0
+                                        total_string = ""
                                         for dice in dices:
+                                            add = 0
+                                            minus = 0
+                                            if "+" in dice:
+                                                add = int(dice.split("+")[1])
+                                                dice = dice.split("+")[0]
+                                            elif "-" in dice:
+                                                minus = int(dice.split("-")[1])
+                                                dice = dice.split("-")[0]
                                             split_dice = dice.split("d")
                                             results = roll_dice(int(split_dice[0]), int(split_dice[1]))
                                             dice_results = ""
                                             for result in results:
                                                 dice_results = "%s %s" % (dice_results, result)
+                                                total_string = "%s + %s" % (total_string, result)
                                                 total = total + int(result)
-                                            adjusted_pad = pad[:-len(dice)]
-                                            summary = "%s\n%s%s%s" % (summary, dice, adjusted_pad, dice_results)
+                                            if add != 0:
+                                                total = total + add
+                                                total_string = "%s + %s" % (total_string, add)
+                                            if minus != 0:
+                                                total = total - minus
+                                                total_string = "%s - %s" % (total_string, minus)
+                                            if total_string.startswith(" ") or total_string.startswith("+") or total_string.startswith("-"):
+                                                total_string = " ".join(total_string.split()[1:])
+                                            padding =""
+                                            for x in range(0, (5-len(dice))*2):
+                                                padding = padding + " "
+                                            if add != 0:
+                                                dice = "%s+%s" % (dice, add)
+                                            if minus != 0:
+                                                dice = "%s-%s" % (dice, minus)
+                                            summary = "%s\n%s%s\t\t\t\t%s" % (summary, dice, padding, dice_results)
+                                        if " " in total_string:
+                                            total_string = "%s = %s" % (total_string, total)
+                                        else:
+                                            total_string = str(total)
                                         slack_client.api_call("chat.postMessage", channel=output['channel'], \
-                                                text=">>><@%s> rolled a *%s*\n%s" % (output['user'], total, summary))
+                                                text=">>><@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary))
                                     break
                                 # Check for moonbeam words
                                 for moonbeam in moonbeams:
