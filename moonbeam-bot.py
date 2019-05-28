@@ -14,6 +14,8 @@ moonbeams = [["Moonbeam",       "https://slack-files.com/T0TGU21T2-FFYTWBGA2-4e1
 with open('/usr/local/moonbeam-bot/words.json', 'r') as f:
     words = json.load(f)["data"]
 
+with open('/usr/local/moonbeam-bot/swears.json', 'r') as f:
+    swears = json.load(f)["data"]
 
 def get_ten_new_words():
     return get_ten_new_words(3)
@@ -119,6 +121,10 @@ if __name__ == "__main__":
                                     command = output['text'].lower().split()[1:]
                                     action = command[0]
                                     if action == "roll":
+                                        for swear in swears:
+                                            if swear in output['text']:
+                                                slack_client.api_call("chat.postMessage", channel=output['channel'], text="There's no need to be rude, <%s>! :face_with_raised_eyebrow:" % output['user'], as_user=True)
+                                                break
                                         dices = command[1:]
                                         summary = "*Dice*    \t\t\t\t*Rolls*"
                                         total = 0
