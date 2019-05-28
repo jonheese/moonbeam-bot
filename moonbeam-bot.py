@@ -123,7 +123,7 @@ if __name__ == "__main__":
                                     if action == "roll":
                                         for swear in swears:
                                             if swear in output['text']:
-                                                slack_client.api_call("chat.postMessage", channel=output['channel'], text="There's no need to be rude, <%s>! :face_with_raised_eyebrow:" % output['user'], as_user=True)
+                                                slack_client.api_call("chat.postMessage", channel=output['channel'], text="There's no need to be rude, <@%s>! :face_with_raised_eyebrow:" % output['user'], as_user=True)
                                                 break
                                         dices = command[1:]
                                         summary = "*Dice*    \t\t\t\t*Rolls*"
