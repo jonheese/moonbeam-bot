@@ -1,0 +1,119 @@
+#!/bin/bash
+#
+### BEGIN INIT INFO
+# Provides:          moonbeam-bot
+# Required-Start:
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start and stop the moonbeam bot daemon
+# Description:       Controls the moonbeam bot process
+### END INIT INFO
+#
+
+CONF_FILE="/etc/default/moonbeam-bot"
+CONF_FILE_MISSING="Create file $CONF_FILE with (at least) the \$EXEC variable defined (eg. /usr/bin/python /usr/local/moonbeam-bot/moonbeam-bot.py)."
+
+SELF=$0
+. /lib/lsb/init-functions
+[ ! -f "$CONF_FILE" ] && echo "$CONF_FILE_MISSING" && exit 1
+. $CONF_FILE
+[ -z "$EXEC" ] && echo "$CONF_FILE_MISSING" && exit 1
+
+PID_FILE=${PID_FILE:-/var/run/moonbeam-bot.pid}
+DAEMON=${DAEMON:-/usr/local/moonbeam-bot/start-moonbeam-bot.sh}
+DAEMON_USER=${DAEMON_USER:-moonbeam}
+DAEMON_NAME="moonbeam-bot server"
+
+startup_timeout=10
+
+# Usage: boolean mooneam_status
+moonbeam_status () {
+	# return 0 if started, 1 if stopped
+	if [ -f "$PID_FILE" ] ; then
+		pid=$(cat $PID_FILE)
+		[ -n "$pid" ] && $(ps $pid) >/dev/null 2>&1 && return $?
+	fi
+	pid=$(ps -ef | grep "$EXEC" | grep -v grep | awk '{print $2}')
+	[ -n "$pid" ] && echo "$pid" > $PID_FILE && return 0
+	return 1
+}
+
+#
+# main()
+#
+
+case "${1:-''}" in
+	'start')
+		# Start daemon
+		log_daemon_msg "Starting $DAEMON_NAME" "python"
+		if moonbeam_status ; then
+			log_progress_msg "already running"
+			log_end_msg 0
+		else
+			start-stop-daemon --start --quiet --chuid $DAEMON_USER --background --exec $DAEMON
+			pid=$(ps -ef | grep "$EXEC" | grep -v grep | awk '{print $2}')
+			echo "$pid" > $PID_FILE
+
+			try_count=0
+			while ! moonbeam_status; do
+				sleep 1
+				if [ $try_count -ge $startup_timeout ]; then
+					break
+				fi
+				log_progress_msg "."
+				try_count=$(( try_count + 1 ))
+			done
+
+			if moonbeam_status ; then
+        		        log_end_msg 0
+			else
+				log_end_msg 1
+				log_failure_msg "Please take a look at the syslog"
+			fi
+		fi
+		;;
+
+	'stop')
+		log_daemon_msg "Stopping $DAEMON_NAME" "python"
+		try_count=0
+		while moonbeam_status ; do
+			sleep 1
+		        start-stop-daemon --stop --oknodo --pidfile $PID_FILE --user $DAEMON_USER --retry=5
+			if [ $try_count -ge $startup_timeout ] ; then
+				break
+			fi
+			log_progress_msg "."
+			try_count=$(( try_count + 1 ))
+		done
+
+		if moonbeam_status; then
+			log_end_msg 1
+			log_failure_msg "Please stop $DAEMON_NAME manually!"
+			exit -1
+		else
+			rm -f $PID_FILE
+			log_end_msg 0
+		fi
+		;;
+
+	'restart')
+		set +e; $SELF stop; set -e
+		$SELF start
+		;;
+
+	'status')
+		if moonbeam_status ; then
+			log_action_msg "$DAEMON_NAME is started."
+		else
+			log_action_msg "$DAEMON_NAME is stopped."
+			exit 3
+		fi
+		;;
+
+	*)
+		echo "Usage: $SELF start|stop|restart|status"
+		exit 1
+		;;
+esac
+
