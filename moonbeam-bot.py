@@ -6,6 +6,7 @@ from config import BOT_ID, BOT_TOKEN, JHEESE_ID, JHEESE_CHANNEL_ID, MASHAPE_KEY
 from lxml import html
 import requests
 import json
+import re
 
 #             Name              Image URL                                                   Frequency score     Words
 moonbeams = [["Moonbeam",       "https://slack-files.com/T0TGU21T2-FFYTWBGA2-4e153c7af7",   3,                  None],
@@ -16,6 +17,9 @@ with open('/usr/local/moonbeam-bot/words.json', 'r') as f:
 
 with open('/usr/local/moonbeam-bot/swears.json', 'r') as f:
     swears = json.load(f)["data"]
+
+with open('/usr/local/moonbeam-bot/pleasantries.json', 'r') as f:
+    pleasantries = json.load(f)["data"]
 
 def get_ten_new_words():
     return get_ten_new_words(3)
@@ -79,10 +83,22 @@ def get_quote():
 
 def roll_dice(number, sides):
     results = []
+    print("Rolling %s - %s" % (number, sides))
+    if number is None or number == "":
+        number = 1
+    else:
+        number = int(number)
     for x in range(0, number):
         seed()
         results.append(randint(1, sides))
     return results
+
+def check_for_match(word, dictionary):
+    for entry in dictionary:
+        pattern = re.compile(entry)
+        if pattern.search(word):
+            return True
+    return False
 
 
 if __name__ == "__main__":
@@ -115,17 +131,40 @@ if __name__ == "__main__":
                                         slack_client.api_call("chat.postMessage", channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(moonbeam_name), as_user=False)
                                 # Quotable request
                                 if "quotable" in output['text'].lower():
-                                    slack_client.api_call("chat.postMessage", channel=output['channel'], text=get_quote(), as_user=True)
+                                    slack_client.api_call("chat.postMessage", channel=output['channel'], text=get_quote())
                                 # General command request
+                                action = ""
                                 if output['text'].lower().startswith("moonbeam"):
-                                    command = output['text'].lower().split()[1:]
-                                    action = command[0]
+                                    words = output['text'].lower().split()[1:]
+                                    rude = False
+                                    pleased = False
+                                    dice_pattern = re.compile("\d*d\d+(\+\d)*(-\d)*$")
+                                    dices = []
+                                    for word in words:
+                                        if check_for_match(word, swears):
+                                            rude = True
+                                            break
+                                        if word == "roll":
+                                            print("Setting action to roll")
+                                            action = word
+                                            continue
+                                        if not dice_pattern.match(word):
+                                            # if we haven't already been treated courteously, check for pleasantry
+                                            if not pleased and check_for_match(word, pleasantries):
+                                                pleased = True
+                                            # If this word isn't a roll, then skip it
+                                            continue
+                                        # This word is a roll, add it to the dices
+                                        dices.append(word)
+                                    if rude:
+                                        slack_client.api_call("chat.postMessage", channel=output['channel'], \
+                                                text="There's no need to be rude, <@%s>! :face_with_raised_eyebrow:" % output['user'])
+                                        break
+                                    if not pleased:
+                                        slack_client.api_call("chat.postMessage", channel=output['channel'], \
+                                                text="Ah ah ah, <@%s>, you didn't say the magic word... :face_with_monocle:" % output['user'])
+                                        break
                                     if action == "roll":
-                                        for swear in swears:
-                                            if swear in output['text']:
-                                                slack_client.api_call("chat.postMessage", channel=output['channel'], text="There's no need to be rude, <@%s>! :face_with_raised_eyebrow:" % output['user'], as_user=True)
-                                                break
-                                        dices = command[1:]
                                         summary = "*Dice*    \t\t\t\t*Rolls*"
                                         total = 0
                                         total_string = ""
@@ -139,7 +178,7 @@ if __name__ == "__main__":
                                                 minus = int(dice.split("-")[1])
                                                 dice = dice.split("-")[0]
                                             split_dice = dice.split("d")
-                                            results = roll_dice(int(split_dice[0]), int(split_dice[1]))
+                                            results = roll_dice(split_dice[0], int(split_dice[1]))
                                             dice_results = ""
                                             for result in results:
                                                 dice_results = "%s %s" % (dice_results, result)
@@ -153,13 +192,12 @@ if __name__ == "__main__":
                                                 total_string = "%s - %s" % (total_string, minus)
                                             if total_string.startswith(" ") or total_string.startswith("+") or total_string.startswith("-"):
                                                 total_string = " ".join(total_string.split()[1:])
-                                            padding =""
+                                            padding = ""
                                             for x in range(0, (5-len(dice))*2):
                                                 padding = padding + " "
-                                            if add != 0:
-                                                dice = "%s+%s" % (dice, add)
-                                            if minus != 0:
-                                                dice = "%s-%s" % (dice, minus)
+                                            if add != 0: dice = "%s+%s" % (dice, add)
+                                            if minus != 0: dice = "%s-%s" % (dice, minus)
+                                            if dice.startswith("d"): dice = "1%s" % dice
                                             summary = "%s\n%s%s\t\t\t\t%s" % (summary, dice, padding, dice_results)
                                         if " " in total_string:
                                             total_string = "%s = %s" % (total_string, total)
@@ -167,6 +205,10 @@ if __name__ == "__main__":
                                             total_string = str(total)
                                         slack_client.api_call("chat.postMessage", channel=output['channel'], \
                                                 text=">>><@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary))
+                                    else:
+                                        print("action was %s" % action)
+                                        slack_client.api_call("chat.postMessage", channel=output['channel'], \
+                                                text="<@%s>, I'm not really sure what \"%s\" means..." % (output['user'], output['text']))
                                     break
                                 # Check for moonbeam words
                                 for moonbeam in moonbeams:
@@ -178,8 +220,7 @@ if __name__ == "__main__":
                                                 if word == message_word:
                                                     print(json.dumps(output, indent=2))
                                                     slack_client.api_call("chat.postMessage", channel=output['channel'], \
-                                                    text="%s because: *%s*\n%s" % (moonbeam[0], word, moonbeam[1]), \
-                                                        as_user=True)
+                                                            text="%s because: *%s*\n%s" % (moonbeam[0], word, moonbeam[1]))
                                                     reset_moonbeam(moonbeam[0])
                                                     break
                     sleep(READ_WEBSOCKET_DELAY)
