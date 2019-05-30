@@ -4,9 +4,7 @@ from random import randint, seed
 from quotes import quotes
 from config import BOT_ID, BOT_TOKEN, JHEESE_ID, JHEESE_CHANNEL_ID, MASHAPE_KEY
 from lxml import html
-import requests
-import json
-import re
+import requests, json, re, traceback, string
 
 #             Name              Image URL                                                   Frequency score     Words
 moonbeams = [["Moonbeam",       "https://slack-files.com/T0TGU21T2-FFYTWBGA2-4e153c7af7",   3,                  None],
@@ -39,7 +37,7 @@ def get_ten_new_words(frequencyMin):
             continue
         words.append(word)
         count = count + 1
-    print words
+    print(words)
     return words
 
 
@@ -51,14 +49,14 @@ def get_ten_new_words_static():
         rand_id = randint(0, len(words)-1)
         ten_words.append(words[rand_id]["word"])
         count = count + 1
-    print ten_words
+    print(ten_words)
     return ten_words
 
 
 def reset_moonbeam(moonbeam_name=None):
     for moonbeam in moonbeams:
         if moonbeam_name == None or moonbeam[0] == moonbeam_name:
-            print "Initializing %s" % moonbeam[0]
+            print("Initializing %s" % moonbeam[0])
             moonbeam[3] = get_ten_new_words(moonbeam[2])
 
 
@@ -83,7 +81,6 @@ def get_quote():
 
 def roll_dice(number, sides):
     results = []
-    print("Rolling %s - %s" % (number, sides))
     if number is None or number == "":
         number = 1
     else:
@@ -145,16 +142,18 @@ if __name__ == "__main__":
                                             rude = True
                                             break
                                         if word == "roll":
-                                            print("Setting action to roll")
                                             action = word
                                             continue
+                                        # Strip the word of punctuation so we can check if it's a dice roll
+                                        for c in ".,?!":
+                                            word = word.replace(c, "")
                                         if not dice_pattern.match(word):
                                             # if we haven't already been treated courteously, check for pleasantry
                                             if not pleased and check_for_match(word, pleasantries):
                                                 pleased = True
                                             # If this word isn't a roll, then skip it
                                             continue
-                                        # This word is a roll, add it to the dices
+                                        # This word is a dice roll, add it to the dices
                                         dices.append(word)
                                     if rude:
                                         slack_client.api_call("chat.postMessage", channel=output['channel'], \
@@ -167,15 +166,18 @@ if __name__ == "__main__":
                                     if action == "roll":
                                         summary = "*Dice*    \t\t\t\t*Rolls*"
                                         total = 0
+                                        max_roll = 0
                                         total_string = ""
                                         for dice in dices:
                                             add = 0
                                             minus = 0
                                             if "+" in dice:
                                                 add = int(dice.split("+")[1])
+                                                max_roll = max_roll + 1
                                                 dice = dice.split("+")[0]
                                             elif "-" in dice:
                                                 minus = int(dice.split("-")[1])
+                                                max_roll = max_roll - 1
                                                 dice = dice.split("-")[0]
                                             split_dice = dice.split("d")
                                             results = roll_dice(split_dice[0], int(split_dice[1]))
@@ -184,6 +186,7 @@ if __name__ == "__main__":
                                                 dice_results = "%s %s" % (dice_results, result)
                                                 total_string = "%s + %s" % (total_string, result)
                                                 total = total + int(result)
+                                                max_roll = max_roll + int(split_dice[1])
                                             if add != 0:
                                                 total = total + add
                                                 total_string = "%s + %s" % (total_string, add)
@@ -203,8 +206,16 @@ if __name__ == "__main__":
                                             total_string = "%s = %s" % (total_string, total)
                                         else:
                                             total_string = str(total)
+
+                                        if total <= int(max_roll * 0.3):
+                                            color = "danger"
+                                        elif total <= int(max_roll * 0.6):
+                                            color = "warning"
+                                        else:
+                                            color = "good"
                                         slack_client.api_call("chat.postMessage", channel=output['channel'], \
-                                                text=">>><@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary))
+                                                attachments=[{"text":"<@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary), \
+                                                              "color":color}])
                                     else:
                                         print("action was %s" % action)
                                         slack_client.api_call("chat.postMessage", channel=output['channel'], \
@@ -225,6 +236,6 @@ if __name__ == "__main__":
                                                     break
                     sleep(READ_WEBSOCKET_DELAY)
             except Exception as e:
-                print("Exception: %s" % repr(e))
+                traceback.print_exc()
         else:
             print("Connection failed. Invalid Slack token or bot ID?")
