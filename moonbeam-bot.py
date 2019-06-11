@@ -4,6 +4,7 @@ from random import randint, seed
 from quotes import quotes
 from config import BOT_ID, BOT_TOKEN, JHEESE_ID, JHEESE_CHANNEL_ID, MASHAPE_KEY
 from lxml import html
+from profanity import profanity
 import requests, json, re, traceback, string
 
 #             Name              Image URL                                                   Frequency score     Words
@@ -12,9 +13,6 @@ moonbeams = [["Moonbeam",       "https://slack-files.com/T0TGU21T2-FFYTWBGA2-4e1
 
 with open('/usr/local/moonbeam-bot/words.json', 'r') as f:
     words = json.load(f)["data"]
-
-with open('/usr/local/moonbeam-bot/swears.json', 'r') as f:
-    swears = json.load(f)["data"]
 
 with open('/usr/local/moonbeam-bot/pleasantries.json', 'r') as f:
     pleasantries = json.load(f)["data"]
@@ -138,7 +136,7 @@ if __name__ == "__main__":
                                     dice_pattern = re.compile("\d*d\d+(\+\d)*(-\d)*$")
                                     dices = []
                                     for word in words:
-                                        if check_for_match(word, swears):
+                                        if profanity.contains_profanity(word):
                                             rude = True
                                             break
                                         if word == "roll":
