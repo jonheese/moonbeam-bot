@@ -205,15 +205,18 @@ if __name__ == "__main__":
                                         else:
                                             total_string = str(total)
 
+                                        image_url = None
                                         if total <= int(max_roll * 0.3):
                                             color = "danger"
+                                            image_url = "https://slack-files.com/T0TGU21T2-FMLC3CUFL-04242147ee"
                                         elif total <= int(max_roll * 0.6):
                                             color = "warning"
                                         else:
                                             color = "good"
-                                        slack_client.api_call("chat.postMessage", channel=output['channel'], \
-                                                attachments=[{"text":"<@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary), \
-                                                              "color":color}])
+                                        attachments = {"text":"<@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary), "color":color}
+                                        if image_url:
+                                            attachments['image_url'] = "https://slack-files.com/T0TGU21T2-FMLC3CUFL-04242147ee"
+                                        slack_client.api_call("chat.postMessage", channel=output['channel'], attachments=[attachments])
                                     else:
                                         print("action was %s" % action)
                                         slack_client.api_call("chat.postMessage", channel=output['channel'], \
