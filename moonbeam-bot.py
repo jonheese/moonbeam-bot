@@ -68,7 +68,7 @@ def get_moonbeam_words(moonbeam_name=None):
 
 def get_quote():
     seed()
-    quote = quotes[randint(0, 10000) % len(quotes)]
+    quote = quotes[randint(0, 1000) % len(quotes)]
     split_quote = quote.split(" - ")
     split_attribution = split_quote[1].split(",")
     person = split_attribution[0]
@@ -96,6 +96,12 @@ def check_for_match(word, dictionary):
     return False
 
 
+def post_message(channel, text=None, attachments=None, as_user=True):
+    print("posting message in channel %s (as_user=%s):" % (channel, as_user))
+    print(text)
+    slack_client.api_call("chat.postMessage", channel=channel, text=text, attachments=attachments, as_user=as_user)
+
+
 if __name__ == "__main__":
     slack_client = SlackClient(BOT_TOKEN)
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
@@ -116,17 +122,20 @@ if __name__ == "__main__":
                                 if 'channel' in output and output['channel'] == JHEESE_CHANNEL_ID and 'user' in output and output['user'] == JHEESE_ID:
                                     command = output['text']
                                     if command == "words":
-                                        slack_client.api_call("chat.postMessage", channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(), as_user=False)
+                                        post_message(channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(), as_user=False)
                                     elif command.startswith("reset"):
                                         if len(command.split(" ")) == 1:
                                             moonbeam_name = None
                                         else:
                                             moonbeam_name = " ".join(command.split(" ")[1:])
                                         reset_moonbeam(moonbeam_name)
-                                        slack_client.api_call("chat.postMessage", channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(moonbeam_name), as_user=False)
+                                        post_message(channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(moonbeam_name), as_user=False)
                                 # Quotable request
                                 if "quotable" in output['text'].lower():
-                                    slack_client.api_call("chat.postMessage", channel=output['channel'], text=get_quote())
+                                    quote = get_quote()
+                                    print("printing quotable:")
+                                    print(quote)
+                                    post_message(channel=output['channel'], text=quote)
                                 # General command request
                                 action = ""
                                 if output['text'].lower().startswith("moonbeam"):
@@ -154,11 +163,11 @@ if __name__ == "__main__":
                                         # This word is a dice roll, add it to the dices
                                         dices.append(word)
                                     if rude:
-                                        slack_client.api_call("chat.postMessage", channel=output['channel'], \
+                                        post_message(channel=output['channel'], \
                                                 text="There's no need to be rude, <@%s>! :face_with_raised_eyebrow:" % output['user'])
                                         break
                                     if not pleased:
-                                        slack_client.api_call("chat.postMessage", channel=output['channel'], \
+                                        post_message(channel=output['channel'], \
                                                 text="Ah ah ah, <@%s>, you didn't say the magic word... :face_with_monocle:" % output['user'])
                                         break
                                     if action == "roll":
@@ -216,10 +225,10 @@ if __name__ == "__main__":
                                         attachments = {"text":"<@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary), "color":color}
                                         if image_url:
                                             attachments['image_url'] = "https://slack-files.com/T0TGU21T2-FMLC3CUFL-04242147ee"
-                                        slack_client.api_call("chat.postMessage", channel=output['channel'], attachments=[attachments])
+                                        post_message(channel=output['channel'], attachments=[attachments])
                                     else:
                                         print("action was %s" % action)
-                                        slack_client.api_call("chat.postMessage", channel=output['channel'], \
+                                        post_message(channel=output['channel'], \
                                                 text="<@%s>, I'm not really sure what \"%s\" means..." % (output['user'], output['text']))
                                     break
                                 # Check for moonbeam words
@@ -231,7 +240,7 @@ if __name__ == "__main__":
                                                 message_word = "".join([i for i in str(message_word) if i.isalpha()])
                                                 if word == message_word:
                                                     print(json.dumps(output, indent=2))
-                                                    slack_client.api_call("chat.postMessage", channel=output['channel'], \
+                                                    post_message(channel=output['channel'], \
                                                             text="%s because: *%s*\n%s" % (moonbeam[0], word, moonbeam[1]))
                                                     reset_moonbeam(moonbeam[0])
                                                     break
