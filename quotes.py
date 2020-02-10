@@ -60,4 +60,5 @@ quotes = [
              "Some English explorer fuck-hated his Spanish translator - Jim DeHart",
              "This guy looks like forensic putty spread over a skull to recreate a face - Chris Coyle, on Stephen R. Covey (I think?)",
              "I mean, I like to hate - Jim DeHart",
+             "Live birth is ok with me, I got a huge dong so it's aight - Jim DeHart",
          ]

@@ -138,7 +138,10 @@ if __name__ == "__main__":
                                     post_message(channel=output['channel'], text=quote)
                                 # General command request
                                 action = ""
-                                if output['text'].lower().startswith("moonbeam"):
+                                if output['text'].lower() == "yes, have some":
+                                    post_message(channel=output['channel'], \
+                                        text="http://yeshavesome.tv.inetu.org")
+                                elif output['text'].lower().startswith("moonbeam"):
                                     words = output['text'].lower().split()[1:]
                                     rude = False
                                     pleased = False
