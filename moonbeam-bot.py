@@ -130,6 +130,10 @@ if __name__ == "__main__":
                                             moonbeam_name = " ".join(command.split(" ")[1:])
                                         reset_moonbeam(moonbeam_name)
                                         post_message(channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(moonbeam_name), as_user=False)
+                                    if command.split()[0] == "post":
+                                        room_name = command.split()[1]
+                                        message = " ".join(command.split()[2:])
+                                        post_message(channel=room_name, text=message)
                                 # Quotable request
                                 if "quotable" in output['text'].lower():
                                     quote = get_quote()

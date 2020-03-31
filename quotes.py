@@ -61,4 +61,7 @@ quotes = [
              "This guy looks like forensic putty spread over a skull to recreate a face - Chris Coyle, on Stephen R. Covey (I think?)",
              "I mean, I like to hate - Jim DeHart",
              "Live birth is ok with me, I got a huge dong so it's aight - Jim DeHart",
+             "I've had some major dumps before, but nothing that will clog a 2-3\" pipe - Jon Heese",
+             "I remember sleep, warm embrace of nothingness. Should have wrapped my dick. - Jim DeHart, master of the haiku",
+             "Sweet release of death, where are you now that I'm done, the child grins at me. - Jim DeHart, master of the haiku",
          ]
