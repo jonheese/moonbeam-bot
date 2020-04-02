@@ -88,6 +88,26 @@ def roll_dice(number, sides):
         results.append(randint(1, sides))
     return results
 
+def post_covid(channel, deaths):
+    keyword = 'Deaths' if deaths else 'Cases'
+    tmpfile = '/tmp/states.csv'
+    urls = [
+            'https://www.worldometers.info/coronavirus/',
+            'https://www.worldometers.info/coronavirus/country/us/',
+           ]
+    counts = []
+    for url in urls:
+        r = requests.get(url)
+        with open(tmpfile, 'wb') as f:
+            f.write(r.content)
+        with open(tmpfile, 'r') as f:
+            lines = f.readlines()
+        for line in lines:
+            if keyword in line:
+                counts.append(line.split()[line.split().index(keyword) - 1])
+                break
+    post_message(channel, "According to worldometers.info, there are currently %s COVID-19 %s worldwide, with %s in the US" % (counts[0], keyword.lower(), counts[1]))
+
 def check_for_match(word, dictionary):
     for entry in dictionary:
         pattern = re.compile(entry)
@@ -145,6 +165,10 @@ if __name__ == "__main__":
                                 if output['text'].lower() == "yes, have some":
                                     post_message(channel=output['channel'], \
                                         text="http://yeshavesome.tv.inetu.org")
+                                if "covid-deaths" in output['text'].lower():
+                                    post_covid(output['channel'], True)
+                                if "covid-cases" in output['text'].lower():
+                                    post_covid(output['channel'], False)
                                 elif output['text'].lower().startswith("moonbeam"):
                                     words = output['text'].lower().split()[1:]
                                     rude = False
