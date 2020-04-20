@@ -146,11 +146,11 @@ def post_covid(channel, stat):
         world_death_rate = round(float(covid_stats['world']['deaths'].replace(',','')) * 100 / float(covid_stats['world']['cases'].replace(',','')), 2)
         world_recovery_rate = round(float(covid_stats['world']['recovered'].replace(',','')) * 100 / float(covid_stats['world']['cases'].replace(',','')), 2)
         world_case_rate = round(float(covid_stats['world']['cases'].replace(',','')) * 100 / float(world_pop), 4)
-        world_death_chance = round((world_death_rate / 100) * (world_case_rate / 100) * 100, 4)
+        world_death_chance = round(world_death_rate * world_case_rate / 100, 4)
         us_death_rate = round(float(covid_stats['us']['deaths'].replace(',','')) * 100 / float(covid_stats['us']['cases'].replace(',','')), 2)
         us_recovery_rate = round(float(covid_stats['us']['recovered'].replace(',','')) * 100 / float(covid_stats['us']['cases'].replace(',','')), 2)
         us_case_rate = round(float(covid_stats['us']['cases'].replace(',','')) * 100 / float(us_pop), 4)
-        us_death_chance = round((us_death_rate / 100) * (us_case_rate / 100) * 100, 4)
+        us_death_chance = round(us_death_rate * us_case_rate / 100, 4)
         post_message(channel, ("The COVID-19 death rate is *%s%%* worldwide, and *%s%%* in the US.\n" + \
             "The COVID-19 recovery rate is *%s%%* worldwide, and *%s%%* in the US.\n" + \
             "The COVID-19 case rate is *%s%%* worldwide, and *%s%%* in the US.\n" + \
