@@ -145,17 +145,20 @@ def post_covid(channel, stat):
         us_pop = 327200000
         world_death_rate = round(float(covid_stats['world']['deaths'].replace(',','')) * 100 / float(covid_stats['world']['cases'].replace(',','')), 2)
         world_recovery_rate = round(float(covid_stats['world']['recovered'].replace(',','')) * 100 / float(covid_stats['world']['cases'].replace(',','')), 2)
-        world_case_rate = int(round(float(covid_stats['world']['cases'].replace(',','')) * 1000000 / float(world_pop)))
+        world_case_rate = round(float(covid_stats['world']['cases'].replace(',','')) * 100 / float(world_pop), 4)
+        world_death_chance = round((world_death_rate / 100) * (world_case_rate / 100) * 100, 4)
         us_death_rate = round(float(covid_stats['us']['deaths'].replace(',','')) * 100 / float(covid_stats['us']['cases'].replace(',','')), 2)
         us_recovery_rate = round(float(covid_stats['us']['recovered'].replace(',','')) * 100 / float(covid_stats['us']['cases'].replace(',','')), 2)
-        us_case_rate = int(round(float(covid_stats['us']['cases'].replace(',','')) * 1000000 / float(us_pop)))
-        post_message(channel, ("According to worldometers.info, the COVID-19 death rate is %s%% worldwide, and %s%% in the US.  " + \
-            "The COVID-19 recovery rate is %s%% worldwide, and %s%% in the US.  " + \
-            "The COVID-19 case rate is %s per million worldwide, and %s per million in the US.") % \
-            (world_death_rate, us_death_rate, world_recovery_rate, us_recovery_rate, world_case_rate, us_case_rate))
+        us_case_rate = round(float(covid_stats['us']['cases'].replace(',','')) * 100 / float(us_pop), 4)
+        us_death_chance = round((us_death_rate / 100) * (us_case_rate / 100) * 100, 4)
+        post_message(channel, ("The COVID-19 death rate is *%s%%* worldwide, and *%s%%* in the US.\n" + \
+            "The COVID-19 recovery rate is *%s%%* worldwide, and *%s%%* in the US.\n" + \
+            "The COVID-19 case rate is *%s%%* worldwide, and *%s%%* in the US.\n" + \
+            "The COVID-19 chance of death is *%s%%* worldwide, and *%s%%* in the US.") % \
+            (world_death_rate, us_death_rate, world_recovery_rate, us_recovery_rate, world_case_rate, us_case_rate, world_death_chance, us_death_chance))
     else:
         percentage = round(float(covid_stats['us'][stat].replace(',','')) * 100 / float(covid_stats['world'][stat].replace(',','')), 2)
-        post_message(channel, "According to worldometers.info, there are currently %s COVID-19 %s worldwide, with %s (%s%%) of those %s in the US" % \
+        post_message(channel, "There are currently *%s* COVID-19 %s worldwide, with *%s (%s%%)* of those %s in the US" % \
             (covid_stats['world'][stat], stat, covid_stats['us'][stat], percentage, stat))
 
 
