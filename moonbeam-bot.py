@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, time
 from slackclient import SlackClient
 from random import randint, seed
 from quotes import quotes
@@ -10,6 +10,19 @@ import requests, json, re, traceback, string
 #             Name              Image URL                                                   Frequency score     Words
 moonbeams = [["Moonbeam",       "https://slack-files.com/T0TGU21T2-FFYTWBGA2-4e153c7af7",   3,                  None],
              ["Super Moonbeam", "https://slack-files.com/T0TGU21T2-FFWT7PSF3-b6f941711f",   2,                  None]]
+covid_stats = {
+                'world': {
+                            'deaths': -1,
+                            'cases': -1,
+                            'recovered': -1,
+                         },
+                'us': {
+                            'deaths': -1,
+                            'cases': -1,
+                            'recovered': -1,
+                      },
+                'timestamp': 0,
+              }
 
 with open('/usr/local/moonbeam-bot/words.json', 'r') as f:
     words = json.load(f)["data"]
@@ -88,25 +101,63 @@ def roll_dice(number, sides):
         results.append(randint(1, sides))
     return results
 
-def post_covid(channel, deaths):
-    keyword = 'Deaths' if deaths else 'Cases'
+
+def get_covid_stats():
+    global covid_stats
+    if covid_stats['timestamp'] + 60 >= time():
+        return
     tmpfile = '/tmp/states.csv'
-    urls = [
-            'https://www.worldometers.info/coronavirus/',
-            'https://www.worldometers.info/coronavirus/country/us/',
-           ]
-    counts = []
-    for url in urls:
-        r = requests.get(url)
+    urls = {
+                'world': 'https://www.worldometers.info/coronavirus/',
+                'us': 'https://www.worldometers.info/coronavirus/country/us/',
+           }
+    for scope in urls.keys():
+        r = requests.get(urls[scope])
+        covid_stats['timestamp'] = time()
         with open(tmpfile, 'wb') as f:
             f.write(r.content)
         with open(tmpfile, 'r') as f:
             lines = f.readlines()
+        deaths_found = False
+        cases_found = False
+        recovered_found = False
+        line_count = 0
         for line in lines:
-            if keyword in line:
-                counts.append(line.split()[line.split().index(keyword) - 1])
+            if not deaths_found and 'Deaths' in line:
+                covid_stats[scope]['deaths'] = line.split()[line.split().index('Deaths') - 1]
+                deaths_found = True
+            if not cases_found and 'Cases' in line:
+                covid_stats[scope]['cases'] = line.split()[line.split().index('Cases') - 1]
+                cases_found = True
+            if not recovered_found and 'Recovered' in line:
+                covid_stats[scope]['recovered'] = lines[line_count + 2].split('>')[1].split('<')[0]
+                recovered_found = True
+            if cases_found and deaths_found and recovered_found:
                 break
-    post_message(channel, "According to worldometers.info, there are currently %s COVID-19 %s worldwide, with %s in the US" % (counts[0], keyword.lower(), counts[1]))
+            line_count += 1
+
+
+def post_covid(channel, stat):
+    get_covid_stats()
+    global covid_stats
+    if stat == 'rates':
+        world_pop = 7800000000
+        us_pop = 327200000
+        world_death_rate = round(float(covid_stats['world']['deaths'].replace(',','')) * 100 / float(covid_stats['world']['cases'].replace(',','')), 2)
+        world_recovery_rate = round(float(covid_stats['world']['recovered'].replace(',','')) * 100 / float(covid_stats['world']['cases'].replace(',','')), 2)
+        world_case_rate = int(round(float(covid_stats['world']['cases'].replace(',','')) * 1000000 / float(world_pop)))
+        us_death_rate = round(float(covid_stats['us']['deaths'].replace(',','')) * 100 / float(covid_stats['us']['cases'].replace(',','')), 2)
+        us_recovery_rate = round(float(covid_stats['us']['recovered'].replace(',','')) * 100 / float(covid_stats['us']['cases'].replace(',','')), 2)
+        us_case_rate = int(round(float(covid_stats['us']['cases'].replace(',','')) * 1000000 / float(us_pop)))
+        post_message(channel, ("According to worldometers.info, the COVID-19 death rate is %s%% worldwide, and %s%% in the US.  " + \
+            "The COVID-19 recovery rate is %s%% worldwide, and %s%% in the US.  " + \
+            "The COVID-19 case rate is %s per million worldwide, and %s per million in the US.") % \
+            (world_death_rate, us_death_rate, world_recovery_rate, us_recovery_rate, world_case_rate, us_case_rate))
+    else:
+        percentage = round(float(covid_stats['us'][stat].replace(',','')) * 100 / float(covid_stats['world'][stat].replace(',','')), 2)
+        post_message(channel, "According to worldometers.info, there are currently %s COVID-19 %s worldwide, with %s (%s%%) of those %s in the US" % \
+            (covid_stats['world'][stat], stat, covid_stats['us'][stat], percentage, stat))
+
 
 def check_for_match(word, dictionary):
     for entry in dictionary:
@@ -165,10 +216,11 @@ if __name__ == "__main__":
                                 if output['text'].lower() == "yes, have some":
                                     post_message(channel=output['channel'], \
                                         text="http://yeshavesome.tv.inetu.org")
-                                if "covid-deaths" in output['text'].lower():
-                                    post_covid(output['channel'], True)
-                                if "covid-cases" in output['text'].lower():
-                                    post_covid(output['channel'], False)
+                                if "covid-stats" in output['text'].lower():
+                                    post_covid(channel=output['channel'], stat='deaths')
+                                    post_covid(channel=output['channel'], stat='recovered')
+                                    post_covid(channel=output['channel'], stat='cases')
+                                    post_covid(channel=output['channel'], stat='rates')
                                 elif output['text'].lower().startswith("moonbeam"):
                                     words = output['text'].lower().split()[1:]
                                     rude = False
@@ -256,12 +308,21 @@ if __name__ == "__main__":
                                         attachments = {"text":"<@%s> rolled a *%s*\n%s" % (output['user'], total_string, summary), "color":color}
                                         if image_url:
                                             attachments['image_url'] = "https://slack-files.com/T0TGU21T2-FMLC3CUFL-04242147ee"
-                                        post_message(channel=output['channel'], attachments=[attachments])
+                                        post_message(channel=output['channel'], text='', attachments=[attachments])
                                     else:
                                         print("action was %s" % action)
                                         post_message(channel=output['channel'], \
                                                 text="<@%s>, I'm not really sure what \"%s\" means..." % (output['user'], output['text']))
                                     break
+                                else:
+                                    if "covid-deaths" in output['text'].lower():
+                                        post_covid(channel=output['channel'], stat='deaths')
+                                    if "covid-cases" in output['text'].lower():
+                                        post_covid(channel=output['channel'], stat='cases')
+                                    if "covid-recovery" in output['text'].lower():
+                                        post_covid(channel=output['channel'], stat='recovered')
+                                    if "covid-rates" in output['text'].lower():
+                                        post_covid(channel=output['channel'], stat='rates')
                                 # Check for moonbeam words
                                 for moonbeam in moonbeams:
                                     message_words = output['text'].lower().split(" ")
