@@ -64,4 +64,5 @@ quotes = [
              "I've had some major dumps before, but nothing that will clog a 2-3\" pipe - Jon Heese",
              "I remember sleep, warm embrace of nothingness. Should have wrapped my dick. - Jim DeHart, master of the haiku",
              "Sweet release of death, where are you now that I'm done, the child grins at me. - Jim DeHart, master of the haiku",
+             "Oh you spent three days configuring a server a human won't log into? Cool ima go masturbate instead so I have something to show for it. - Jim DeHart, on gatekeeping neckbeards",
          ]
