@@ -58,7 +58,7 @@ quotes = [
              "Yeah, I have healthy bristol #4s pretty consistently, and I don't think this toilet is rated for it - Pat Martin, a man of solid constitution",
              "Ah yea, turd is bad, shit missile is worse - Jim DeHart",
              "Some English explorer fuck-hated his Spanish translator - Jim DeHart",
-             "This guy looks like forensic putty spread over a skull to recreate a face - Chris Coyle, on Stephen R. Covey (I think?)",
+             "This guy looks like forensic putty spread over a skull to recreate a face - Chris Coyle, on Stephen M. R. Covey",
              "I mean, I like to hate - Jim DeHart",
              "Live birth is ok with me, I got a huge dong so it's aight - Jim DeHart",
              "I've had some major dumps before, but nothing that will clog a 2-3\" pipe - Jon Heese",
