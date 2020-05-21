@@ -248,6 +248,8 @@ if __name__ == "__main__":
                                             continue
                                         # This word is a dice roll, add it to the dices
                                         dices.append(word)
+                                    if not action:
+                                        break
                                     if rude:
                                         post_message(channel=output['channel'], \
                                                 text="There's no need to be rude, <@%s>! :face_with_raised_eyebrow:" % output['user'])
