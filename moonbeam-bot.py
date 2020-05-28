@@ -1,7 +1,6 @@
 from time import sleep, time
 from slackclient import SlackClient
 from random import randint, seed
-from quotes import quotes
 from config import BOT_ID, BOT_TOKEN, JHEESE_ID, JHEESE_CHANNEL_ID, MASHAPE_KEY
 from lxml import html
 from profanity import profanity
@@ -25,10 +24,13 @@ covid_stats = {
               }
 
 with open('/usr/local/moonbeam-bot/words.json', 'r') as f:
-    words = json.load(f)["data"]
+    words = json.load(f)
 
 with open('/usr/local/moonbeam-bot/pleasantries.json', 'r') as f:
-    pleasantries = json.load(f)["data"]
+    pleasantries = json.load(f)
+
+with open('/usr/local/moonbeam-bot/quotes.json', 'r') as f:
+    quotes = json.load(f)
 
 def get_ten_new_words():
     return get_ten_new_words(3)
@@ -79,9 +81,21 @@ def get_moonbeam_words(moonbeam_name=None):
     return message
 
 
+def add_quote(quote):
+    quotes.append(quote)
+    with open('/usr/local/moonbeam-bot/quotes.json', 'w') as f:
+        json.dump(quotes, f, indent=2)
+
+
 def get_quote():
     seed()
     quote = quotes[randint(0, 1000) % len(quotes)]
+    return quote
+
+
+def get_quote_message(quote=None):
+    if not quote:
+        quote = get_quote()
     split_quote = quote.split(" - ")
     split_attribution = split_quote[1].split(",")
     person = split_attribution[0]
@@ -172,7 +186,7 @@ def check_for_match(word, dictionary):
 
 def post_message(channel, text=None, attachments=None, as_user=True):
     print("posting message in channel %s (as_user=%s):" % (channel, as_user))
-    print(text)
+    print(text.encode('utf-8').strip())
     slack_client.api_call("chat.postMessage", channel=channel, text=text, attachments=attachments, as_user=as_user)
 
 
@@ -210,7 +224,7 @@ if __name__ == "__main__":
                                         post_message(channel=room_name, text=message)
                                 # Quotable request
                                 if "quotable" in output['text'].lower():
-                                    quote = get_quote()
+                                    quote = get_quote_message()
                                     print("printing quotable:")
                                     print(quote)
                                     post_message(channel=output['channel'], text=quote)
@@ -225,19 +239,30 @@ if __name__ == "__main__":
                                     post_covid(channel=output['channel'], stat='cases')
                                     post_covid(channel=output['channel'], stat='rates')
                                 elif output['text'].lower().startswith("moonbeam"):
+                                    orig_words = output['text'].split()[1:]
                                     words = output['text'].lower().split()[1:]
                                     rude = False
                                     pleased = False
                                     dice_pattern = re.compile("\d*d\d+(\+\d)*(-\d)*$")
                                     dices = []
+                                    command_index = -1
+                                    index = -1
                                     for word in words:
+                                        index += 1
                                         if profanity.contains_profanity(word):
                                             rude = True
-                                            break
+                                            continue
                                         if word == "roll":
                                             action = word
                                             continue
-                                        # Strip the word of punctuation so we can check if it's a dice roll
+                                        if word == "add-quote":
+                                            action = "add-quote"
+                                            command_index = index
+                                            continue
+                                        if word == "help":
+                                            action = "help"
+                                            continue
+                                        # Strip all punctuation from the word so we can check if it's a dice roll
                                         for c in ".,?!":
                                             word = word.replace(c, "")
                                         if not dice_pattern.match(word):
@@ -250,6 +275,26 @@ if __name__ == "__main__":
                                         dices.append(word)
                                     if not action:
                                         break
+                                    if action == "add-quote":
+                                        try:
+                                            quote = " ".join(orig_words[command_index+1:])
+                                            if len(quote.split(" - ")) != 2:
+                                                raise Exception("No dash in quote")
+                                            add_quote(quote)
+                                            post_message(channel=output['channel'], text="Okay <@%s>, I added the following Quotable to my database:" % output['user'])
+                                            post_message(channel=output['channel'], text=get_quote_message(quote))
+                                        except Exception as e:
+                                            random_quote = get_quote()
+                                            post_message(channel=output['channel'], \
+                                                text="<@%s>, to add a quote to my database, your message must follow the format: `Moonbeam add-quote <quote> - <attribution>`, " % \
+                                                output['user'] + ", eg. `Moonbeam add-quote %s`" % random_quote)
+                                            raise e
+                                        continue
+                                    if action == "help":
+                                        post_message(channel=output['channel'], \
+                                            text="I understand the following commands: `Moonbeam roll <dice>`, `Moonbeam add-quote <quote> - <attribution>`, " + \
+                                            "`covid-stats`, `covid-deaths`, `covid-cases`, `covid-recovery`, `covid-rates`, `quotable`")
+                                        continue
                                     if rude:
                                         post_message(channel=output['channel'], \
                                                 text="There's no need to be rude, <@%s>! :face_with_raised_eyebrow:" % output['user'])
