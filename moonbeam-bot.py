@@ -1,5 +1,7 @@
 import json
+import logging
 import mysql.connector
+import os
 import re
 import requests
 import traceback
@@ -7,10 +9,8 @@ from mysql.connector import Error
 from time import sleep, time
 from slackclient import SlackClient
 from random import randint, seed
-from config import BOT_ID, BOT_TOKEN, JHEESE_ID, JHEESE_CHANNEL_ID, MASHAPE_KEY
-from config import DB_HOST, DB_NAME, DB_USER, DB_PASSWORD
 from profanity import profanity
-
+import urllib
 
 #             Name              Image URL                                                   Frequency score     Words
 moonbeams = [["Moonbeam",       "https://slack-files.com/T0TGU21T2-FFYTWBGA2-4e153c7af7",   3,                  None],
@@ -29,8 +29,18 @@ covid_stats = {
                 'timestamp': 0,
               }
 
+autoscoogle_triggers = [
+                        "what is ",
+                        "what are ",
+                        "wtf is ",
+                        "wtf are ",
+                       ]
+
 with open('/usr/local/moonbeam-bot/words.json', 'r') as f:
     words = json.load(f)
+
+with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
+    config = json.load(f)
 
 with open('/usr/local/moonbeam-bot/pleasantries.json', 'r') as f:
     pleasantries = json.load(f)
@@ -38,30 +48,11 @@ with open('/usr/local/moonbeam-bot/pleasantries.json', 'r') as f:
 with open('/usr/local/moonbeam-bot/quotes.json', 'r') as f:
     quotes = json.load(f)
 
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+log = logging.getLogger("moonbeam-bot")
+
 
 def get_ten_new_words():
-    return get_ten_new_words(3)
-
-
-def get_ten_new_words(frequencyMin):
-    count = 0
-    words = []
-    headers = {'X-Mashape-Key': MASHAPE_KEY}
-    while count < 10:
-        data = json.loads(requests.get('https://wordsapiv1.p.mashape.com/words/?random=true&hasDetails=frequency&frequencyMin=%s' % frequencyMin, headers=headers).content)
-        if "frequency" not in data.keys():
-            continue
-        frequency = float(data["frequency"])
-        word = data["word"]
-        if frequency < 3:
-            continue
-        words.append(word)
-        count = count + 1
-    print(words)
-    return words
-
-
-def get_ten_new_words_static():
     ten_words = []
     count = 0
     while count < 10:
@@ -69,22 +60,22 @@ def get_ten_new_words_static():
         rand_id = randint(0, len(words)-1)
         ten_words.append(words[rand_id]["word"])
         count = count + 1
-    print(ten_words)
+    log.debug(ten_words)
     return ten_words
 
 
 def reset_moonbeam(moonbeam_name=None):
     for moonbeam in moonbeams:
         if moonbeam_name == None or moonbeam[0] == moonbeam_name:
-            print("Initializing %s" % moonbeam[0])
-            moonbeam[3] = get_ten_new_words(moonbeam[2])
+            log.info("Initializing %s" % moonbeam[0])
+            moonbeam[3] = get_ten_new_words()
 
 
 def get_moonbeam_words(moonbeam_name=None):
     message = ""
     for moonbeam in moonbeams:
         if moonbeam_name == None or moonbeam[0] == moonbeam_name:
-            message="%s%s: %s\n" % (message, moonbeam[0], ", ".join(moonbeam[3]))
+            message = "%s%s: %s\n" % (message, moonbeam[0], ", ".join(moonbeam[3]))
     return message
 
 
@@ -193,8 +184,8 @@ def check_for_match(word, dictionary):
 
 
 def post_message(channel, text=None, attachments=None, as_user=True, slack_client=None):
-    print("posting message in channel %s (as_user=%s):" % (channel, as_user))
-    print(text.encode('utf-8').strip())
+    log.info("posting message in channel %s (as_user=%s):" % (channel, as_user))
+    log.info(text.encode('utf-8').strip())
     slack_client.api_call("chat.postMessage", channel=channel, text=text, attachments=attachments, as_user=as_user)
 
 
@@ -210,8 +201,8 @@ def store_message(data, conn, cache=None):
         return cache
     try:
         slack_user_id = data["user"]
-    except KeyError:
-        print(json.dumps(data, indent=2))
+    except KeyError as ke:
+        log.exception(json.dumps(data, indent=2))
         return cache
     try:
         slack_team_id = data["team"]
@@ -250,43 +241,56 @@ def store_message(data, conn, cache=None):
 def main():
     conn = init_db()
     cache = None
-    slack_client = SlackClient(BOT_TOKEN)
+    slack_client = SlackClient(config.get("BOT_TOKEN"))
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
-#    reset_moonbeam()
+    reset_moonbeam()
     while True:
         if slack_client.rtm_connect():
-            print("moonbeam-bot connected and running!")
+            log.info("moonbeam-bot connected and running!")
             try:
                 while True:
                     output_list = slack_client.rtm_read()
                     if output_list and len(output_list) > 0:
                         for output in output_list:
                             if output and 'text' in output and ('is_ephemeral' not in output or output['is_ephemeral'] != "true"):
-                                cache = store_message(output, conn, cache)
-                                if ('bot_id' in output and output['bot_id'] == BOT_ID) or ('username' in output and output['username'] == "slackbot"):
+                                try:
+                                    cache = store_message(output, conn, cache)
+                                except Exception as e:
+                                    log.exception(e)
+                                if ('bot_id' in output and output['bot_id'] == config.get("BOT_ID")) or ('username' in output and output['username'] == "slackbot"):
                                     continue
-                                print(json.dumps(output, indent=2))
+                                log.info(json.dumps(output, indent=2))
                                 # Control message from jheese
-                                if 'channel' in output and output['channel'] == JHEESE_CHANNEL_ID and 'user' in output and output['user'] == JHEESE_ID:
+                                if 'channel' in output and output['channel'] == config.get("MASTER_CHANNEL_ID") and 'user' in output and output['user'] == config.get("MASTER_ID"):
                                     command = output['text']
                                     if command == "words":
-                                        post_message(channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(), as_user=False, slack_client=slack_client)
+                                        post_message(channel=config.get("MASTER_CHANNEL_ID"), text=get_moonbeam_words(), as_user=False, slack_client=slack_client)
                                     elif command.startswith("reset"):
                                         if len(command.split(" ")) == 1:
                                             moonbeam_name = None
                                         else:
                                             moonbeam_name = " ".join(command.split(" ")[1:])
                                         reset_moonbeam(moonbeam_name)
-                                        post_message(channel=JHEESE_CHANNEL_ID, text=get_moonbeam_words(moonbeam_name), as_user=False, slack_client=slack_client)
+                                        post_message(channel=config.get("MASTER_CHANNEL_ID"), text=get_moonbeam_words(moonbeam_name), as_user=False, slack_client=slack_client)
                                     if command.split()[0] == "post":
                                         room_name = command.split()[1]
                                         message = " ".join(command.split()[2:])
                                         post_message(channel=room_name, text=message, slack_client=slack_client)
+                                if "user" in output and output["user"] in config.get("AUTOSCOOGLE_USERS") and "text" in output:
+                                    # Potential auto-scoogle request
+                                    subject = None
+                                    for trigger in autoscoogle_triggers:
+                                        if trigger in output["text"].lower():
+                                            subject = output["text"].split(trigger)[1]
+                                            break
+                                    if subject:
+                                        scoogle = "I Auto-Scoogled that for you:\nhttp://www.google.com/search?q=%s" % urllib.quote(subject)
+                                        post_message(channel=output['channel'], text=scoogle, slack_client=slack_client)
                                 # Quotable request
                                 if "quotable" in output['text'].lower():
                                     quote = get_quote_message()
-                                    print("printing quotable:")
-                                    print(quote)
+                                    log.info("printing quotable:")
+                                    log.info(quote)
                                     post_message(channel=output['channel'], text=quote, slack_client=slack_client)
                                 # General command request
                                 action = ""
@@ -295,10 +299,10 @@ def main():
                                         text="http://yeshavesome.tv.inetu.org",
                                         slack_client=slack_client)
                                 if "covid-stats" in output['text'].lower():
-                                    post_covid(channel=output['channel'], stat='deaths')
-                                    post_covid(channel=output['channel'], stat='recovered')
-                                    post_covid(channel=output['channel'], stat='cases')
-                                    post_covid(channel=output['channel'], stat='rates')
+                                    post_covid(channel=output['channel'], stat='deaths', slack_client=slack_client)
+                                    post_covid(channel=output['channel'], stat='recovered', slack_client=slack_client)
+                                    post_covid(channel=output['channel'], stat='cases', slack_client=slack_client)
+                                    post_covid(channel=output['channel'], stat='rates', slack_client=slack_client)
                                 elif output['text'].lower().startswith("moonbeam"):
                                     orig_words = output['text'].split()[1:]
                                     words = output['text'].lower().split()[1:]
@@ -421,7 +425,7 @@ def main():
                                             attachments['image_url'] = "https://slack-files.com/T0TGU21T2-FMLC3CUFL-04242147ee"
                                         post_message(channel=output['channel'], text='', attachments=[attachments], slack_client=slack_client)
                                     else:
-                                        print("action was %s" % action)
+                                        log.info("action was %s" % action)
                                         post_message(channel=output['channel'], \
                                                 text="<@%s>, I'm not really sure what \"%s\" means..." % (output['user'], output['text']) ,slack_client=slack_client)
                                     break
@@ -442,7 +446,7 @@ def main():
                                             for message_word in message_words:
                                                 message_word = "".join([i for i in str(message_word) if i.isalpha()])
                                                 if word == message_word:
-                                                    print(json.dumps(output, indent=2))
+                                                    log.debug(json.dumps(output, indent=2))
                                                     post_message(channel=output['channel'], \
                                                             text="%s because: *%s*\n%s" % (moonbeam[0], word, moonbeam[1]), slack_client=slack_client)
                                                     reset_moonbeam(moonbeam[0])
@@ -451,22 +455,24 @@ def main():
             except Exception as e:
                 traceback.print_exc()
         else:
-            print("Connection failed. Invalid Slack token or bot ID?")
+            log.error("Connection failed. Invalid Slack token or bot ID?")
 
 
 def init_db():
     conn = None
     try:
-        conn = mysql.connector.connect(host=DB_HOST,
-                                       database=DB_NAME,
-                                       user=DB_USER,
-                                       password=DB_PASSWORD)
+        conn = mysql.connector.connect(host=config.get("DB_HOST"),
+                                       database=config.get("DB_NAME"),
+                                       user=config.get("DB_USER"),
+                                       password=config.get("DB_PASSWORD"))
     except Error as e:
-        print("Failed to connect to db: %s" % e)
+        log.exception("Failed to connect to db: %s" % e)
     return conn
 
 
 def select(query, conn):
+    if not conn:
+        conn = init_db()
     cursor = conn.cursor()
     cursor.execute(query)
     records = cursor.fetchall()
@@ -475,6 +481,8 @@ def select(query, conn):
 
 
 def get_id(table, slack_id_column, slack_id, conn):
+    if not conn:
+        conn = init_db()
     cursor = conn.cursor()
     query = "select id from %s where %s = '%s'" % (table, slack_id_column, slack_id)
     cursor.execute(query)
@@ -489,20 +497,22 @@ def insert(table, columns, values, slack_id_column, slack_id, conn):
     item_id = get_id(table, slack_id_column, slack_id, conn)
     if item_id:
         return item_id[0][0]
+    if not conn:
+        conn = init_db()
     cursor = conn.cursor()
     if isinstance(columns, list):
         columns = ", ".join(columns)
     if isinstance(values, list):
         for index, value in enumerate(values):
             if isinstance(value, int):
-                print("inserting %s at index %s" % (unicode(value), index))
+                log.debug("inserting %s at index %s" % (unicode(value), index))
                 values[index] = unicode(value)
             else:
                 values[index] = value.replace(u"'", u"\'")
-        print(values)
+        log.debug(values)
         values = u", ".join("'" + value + "'" for value in values)
     query = "insert into %s(%s) values (%s)" % (table, columns, values)
-    print(query)
+    log.debug(query)
     cursor.execute(query)
     conn.commit()
     item_id = get_id(table, slack_id_column, slack_id, conn)
@@ -511,6 +521,8 @@ def insert(table, columns, values, slack_id_column, slack_id, conn):
 
 
 def get_message_id(timestamp, user_id, conn):
+    if not conn:
+        conn = init_db()
     cursor = conn.cursor()
     query = "select id from tbl_messages where timestamp = %s and user_id = %s"
     cursor.execute(query, (timestamp, user_id))
@@ -525,16 +537,23 @@ def insert_message(team_id, channel_id, user_id, timestamp, text, conn):
     message_id = get_message_id(timestamp, user_id, conn)
     if message_id:
         return message_id
+    if not conn:
+        conn = init_db()
     cursor = conn.cursor()
     query = "insert into tbl_messages (team_id, channel_id, user_id, timestamp, text) values (%s, %s, %s, %s, %s)"
+    log.info("Inserting message:")
+    log.info(query % (team_id, channel_id, user_id, timestamp, text))
     cursor.execute(query, (team_id, channel_id, user_id, timestamp, text))
     conn.commit()
     cursor.close()
     message_id = get_message_id(timestamp, user_id, conn)
+    log.info("Got message ID : (%s)" % message_id)
     return message_id
 
 
 def insert_file(file, conn):
+    if not conn:
+        conn = init_db()
     cursor = conn.cursor()
     query = "insert into tbl_files (message_id, mimetype, thumb_800, thumb_80, permalink, permalink_public, name) values (%s, %s, %s, %s, %s, %s, %s)"
     values = (
@@ -546,7 +565,7 @@ def insert_file(file, conn):
         file.get('permalink_public'),
         file.get('name'),
     )
-    print(query % values)
+    log.debug(query % values)
     cursor.execute(query, values)
     conn.commit()
     cursor.close()
@@ -587,11 +606,13 @@ def handle_user_profile(user_profile, user_id, conn):
         subs.append(user_profile['image_72'])
     if not subs:
         return
+    if not conn:
+        conn = init_db()
     cursor = conn.cursor()
     query = query[:-1]
     query += " where id = %s"
     subs.append(user_id)
-    print(query % tuple(subs))
+    log.debug(query % tuple(subs))
     cursor.execute(query, tuple(subs))
     conn.commit()
     cursor.close()

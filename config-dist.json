@@ -1,0 +1,14 @@
+{
+    "BOT_ID": "MOONBEAM_BOT_ID",
+    "BOT_TOKEN": "xoxb-MOONBEAM_BOT_TOKEN",
+    "MASTER_ID": "ADMIN_ID",
+    "MASTER_CHANNEL_ID": "ADMIN_DM_CHANNEL_ID",
+    "DB_HOST": "localhost",
+    "DB_NAME": "slack_archive",
+    "DB_USER": "slack_archive",
+    "DB_PASSWORD": "PASSWORD",
+    "AUTOSCOOGLE_USERS": [
+        "SLACKUSERID",
+        "ANOTHERONE"
+    ]
+}

@@ -221,6 +221,9 @@ def main():
                 if line.startswith("{"):
                     message_depth += 1
                     json_buffer += line
+                elif line.startswith("INFO:moonbeam-bot:{"):
+                    message_depth += 1
+                    json_buffer += line[18:]
                 else:
                     continue
             else:
