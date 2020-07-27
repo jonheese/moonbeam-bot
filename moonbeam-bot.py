@@ -34,6 +34,8 @@ autoscoogle_triggers = [
                         "what are ",
                         "wtf is ",
                         "wtf are ",
+                        "what the fuck is ",
+                        "what the fuck are ",
                        ]
 
 with open('/usr/local/moonbeam-bot/words.json', 'r') as f:
@@ -281,7 +283,7 @@ def main():
                                     subject = None
                                     for trigger in autoscoogle_triggers:
                                         if trigger in output["text"].lower():
-                                            subject = output["text"].split(trigger)[1]
+                                            subject = output["text"].split(trigger)[1].split("?")[0]
                                             break
                                     if subject:
                                         scoogle = "I Auto-Scoogled that for you:\nhttp://www.google.com/search?q=%s" % urllib.quote(subject)
