@@ -1,19 +1,23 @@
+#!/usr/local/bin/python3
+
 import json
 import sys
 import mysql.connector
 from mysql.connector import Error
-from config import DB_HOST, DB_NAME, DB_USER, DB_PASSWORD
 
+
+with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
+    config = json.load(f)
 
 def init_db():
     conn = None
     try:
-        conn = mysql.connector.connect(host=DB_HOST,
-                                       database=DB_NAME,
-                                       user=DB_USER,
-                                       password=DB_PASSWORD)
+        conn = mysql.connector.connect(host=config['DB_HOST'],
+                                       database=config['DB_NAME'],
+                                       user=config['DB_USER'],
+                                       password=config['DB_PASSWORD'])
     except Error as e:
-        print("Failed to connect to db: %s" % e)
+        print(f"Failed to connect to db: {e}")
     return conn
 
 
@@ -27,7 +31,7 @@ def select(query, conn):
 
 def get_id(table, slack_id_column, slack_id, conn):
     cursor = conn.cursor()
-    query = "select id from %s where %s = '%s'" % (table, slack_id_column, slack_id)
+    query = f"select id from {table} where {slack_id_column} = '{slack_id}'"
     cursor.execute(query)
     records = cursor.fetchall()
     cursor.close()
@@ -46,13 +50,13 @@ def insert(table, columns, values, slack_id_column, slack_id, conn):
     if isinstance(values, list):
         for index, value in enumerate(values):
             if isinstance(value, int):
-                print("inserting %s at index %s" % (unicode(value), index))
-                values[index] = unicode(value)
+                print(f"inserting {str(value)} at index {index}"
+                values[index] = str(value)
             else:
                 values[index] = value.replace(u"'", u"\'")
         print(values)
         values = u", ".join("'" + value + "'" for value in values)
-    query = "insert into %s(%s) values (%s)" % (table, columns, values)
+    query = f"insert into {table}({columns}) values ({values})"
     print(query)
     cursor.execute(query)
     conn.commit()
@@ -158,7 +162,7 @@ def handle_json(json_buffer, conn, cache=None):
     try:
         data = json.loads(json_buffer)
     except Exception as e:
-        print("Exception (%s) parsing JSON: (%s)" % (e, json_buffer))
+        print(f"Exception ({e}) parsing JSON: ({json_buffer})"
         with open('/tmp/failed_imports', 'a+') as f:
             f.write(json_buffer)
         return
@@ -182,7 +186,7 @@ def handle_json(json_buffer, conn, cache=None):
     if "file" in data.keys():
         files.append(data['file'])
     if files:
-        print("Found file(s): %s" % files)
+        print(f"Found file(s): {files}")
 
     if not slack_team_id in cache["teams"].keys():
         team_id = insert("tbl_teams", "slack_team_id", slack_team_id, "slack_team_id", slack_team_id, conn)
@@ -203,9 +207,8 @@ def handle_json(json_buffer, conn, cache=None):
     handle_files(files, message_id, conn)
     if "user_profile" in data.keys():
         handle_user_profile(data['user_profile'], user_id, conn)
-    #print("channel: %s, user: %s, team: %s, message: %s" % (channel_id, user_id, team_id, message_id))
     if message_id % 100 == 0:
-        print("channel: %s, user: %s, team: %s, message: %s" % (channel_id, user_id, team_id, message_id))
+        print(f"channel: {channel_id}, user: {user_id}, team: {team_id}, message: {message_id}")
     return cache
 
 

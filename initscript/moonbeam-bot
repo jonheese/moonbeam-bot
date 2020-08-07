@@ -12,7 +12,7 @@
 #
 
 CONF_FILE="/etc/default/moonbeam-bot"
-CONF_FILE_MISSING="Create file $CONF_FILE with (at least) the \$EXEC variable defined (eg. /usr/bin/python /usr/local/moonbeam-bot/moonbeam-bot.py)."
+CONF_FILE_MISSING="Create file $CONF_FILE with (at least) the \$EXEC variable defined (eg. /usr/bin/python3 -u /usr/local/moonbeam-bot/moonbeam-bot.py)."
 
 SELF=$0
 . /lib/lsb/init-functions
@@ -46,7 +46,7 @@ moonbeam_status () {
 case "${1:-''}" in
 	'start')
 		# Start daemon
-		log_daemon_msg "Starting $DAEMON_NAME" "python"
+		log_daemon_msg "Starting $DAEMON_NAME" "python3"
 		if moonbeam_status ; then
 			log_progress_msg "already running"
 			log_end_msg 0
@@ -65,6 +65,7 @@ case "${1:-''}" in
 				try_count=$(( try_count + 1 ))
 			done
 
+            sleep 1
 			if moonbeam_status ; then
         		        log_end_msg 0
 			else
@@ -75,7 +76,7 @@ case "${1:-''}" in
 		;;
 
 	'stop')
-		log_daemon_msg "Stopping $DAEMON_NAME" "python"
+		log_daemon_msg "Stopping $DAEMON_NAME" "python3"
 		try_count=0
 		while moonbeam_status ; do
 			sleep 1

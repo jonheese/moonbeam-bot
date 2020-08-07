@@ -1,4 +1,4 @@
-EXEC="/usr/bin/python /usr/local/moonbeam-bot/moonbeam-bot.py"
+EXEC="/usr/bin/python3 /usr/local/moonbeam-bot/moonbeam-bot.py"
 LOG_FILE="/var/log/moonbeam-bot.log"
 PID_FILE="/var/run/moonbeam-bot.pid"
 DAEMON="/usr/local/moonbeam-bot/start-moonbeam-bot.sh"
