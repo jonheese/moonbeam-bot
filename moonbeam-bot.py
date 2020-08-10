@@ -52,16 +52,19 @@ class Moonbeam:
 
     def __plugin_message(self, request):
         for plugin in self.__plugins:
-            for response in plugin.receive(request):
-                self.__post_message(response)
+            try:
+                for response in plugin.receive(request):
+                    self.__post_message(response)
+            except Exception as e:
+                self.__log.exception(f"Encountered an exception responding to message: {e}")
 
 
     def __process_message(self, **payload):
         message = payload['data']
         self.__web_client = payload['web_client']
-        if message and 'text' in message.keys() and not message.get('is_ephemeral') and message.get('bot_id') != self.__config.get("BOT_ID"):
+        if message and 'text' in message.keys() and not message.get('is_ephemeral'):
             self.__log.info(json.dumps(message, indent=2))
-            if message.get('username') != "slackbot":
+            if message.get('bot_id') != self.__config.get("BOT_ID") and message.get('username') != "slackbot":
                 self.__plugin_message(message)
         else:
             self.__log.debug("Not responding to message:")
