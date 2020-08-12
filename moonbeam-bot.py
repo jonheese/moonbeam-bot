@@ -1,13 +1,13 @@
 #!/usr/local/bin/python3
 
-from plugins.autoscoogle_plugin import AutoScooglePlugin
-from plugins.command_plugin import CommandPlugin
-from plugins.covid_plugin import COVIDPlugin
-from plugins.dbstore_plugin import DBStorePlugin
-from plugins.dice_plugin import DicePlugin
-from plugins.help_plugin import HelpPlugin
-from plugins.moonbeam_plugin import MoonbeamPlugin
-from plugins.quotable_plugin import QuotablePlugin
+from plugins.autoscoogle import AutoScooglePlugin
+from plugins.command import CommandPlugin
+from plugins.covid import COVIDPlugin
+from plugins.dbstore import DBStorePlugin
+from plugins.dice import DicePlugin
+from plugins.help import HelpPlugin
+from plugins.moonbeam import MoonbeamPlugin
+from plugins.quotable import QuotablePlugin
 
 from slack import RTMClient
 from slack.errors import SlackApiError
