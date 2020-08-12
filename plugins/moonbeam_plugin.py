@@ -33,7 +33,6 @@ class MoonbeamPlugin(plugin.Plugin):
             if moonbeam_name == None or moonbeam['name'] == moonbeam_name:
                 self._log.info(f"Initializing {moonbeam['name']}")
                 moonbeam['words'] = self.__get_ten_new_words()
-                moonbeam['words'].append('poopsmith')
 
 
     def __get_moonbeam_words(self, moonbeam_name=None):
