@@ -31,10 +31,12 @@ class DBStorePlugin(plugin.Plugin):
                 "teams": {},
             }
         timestamp = data["ts"].split(".")[0]
-        if "bot_id" in data.keys():
-            return
+        #if "bot_id" in data.keys():
+        #    return
         try:
-            slack_user_id = data["user"]
+            slack_user_id = data.get("user")
+            if not slack_user_id:
+                slack_user_id = data.get("bot_id")
         except KeyError as ke:
             return
         try:
@@ -55,7 +57,12 @@ class DBStorePlugin(plugin.Plugin):
         else:
             team_id = self.__cache["teams"][slack_team_id]
         if not slack_user_id in self.__cache["users"].keys():
-            user_id = self.__insert("tbl_users", ["slack_user_id", "team_id"], [slack_user_id, team_id], "slack_user_id", slack_user_id)
+            columns = ["slack_user_id", "team_id"]
+            values = [slack_user_id, team_id]
+            if "username" in data.keys():
+                columns.append("username")
+                values.append(data["username"])
+            user_id = self.__insert("tbl_users", columns, values, "slack_user_id", slack_user_id)
             self.__cache["users"][slack_user_id] = user_id
         else:
             user_id = self.__cache["users"][slack_user_id]

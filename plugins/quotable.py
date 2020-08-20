@@ -103,17 +103,17 @@ class QuotablePlugin(plugin.Plugin):
                     else:
                         responses.append(self.__build_message(f"Sorry, <@{user}>, but that quote looks very similar to this quote, which is already in my database:", channel))
                         responses.append(self.__get_quote_message(channel, dupe_quote))
-                        responses.append(self.__build_message(f"If you are sure you still want to add it, send me a DM saying \"add\" and I'll take care of it for you. :thumbsup:\n" + \
-                                         "Otherwise, you can send me a DM saying \"cancel\" and we'll forget this ever happened. :wink:", channel))
+                        responses.append(self.__build_message(f"If you are sure you still want to add it, send me a DM saying \"add quote\" and I'll take care of it for you. :thumbsup:\n" + \
+                                         "Otherwise, you can send me a DM saying \"cancel quote\" and we'll forget this ever happened. :wink:", channel))
                         self.__confirmations[user] = quote
                 except Exception as e:
                     self._log.exception(e)
                     responses.append(self.__show_usage(request))
             else:
                 responses.append(self.__show_usage(request))
-        if text.lower() == "add" or text.lower() == "cancel":
+        if text.lower() == "add quote" or text.lower() == "cancel quote":
             if user in self.__confirmations.keys():
-                if text.lower() == "add":
+                if text.lower() == "add quote":
                     responses = self.__add_success(request, self.__confirmations[user], responses)
                     self._log.debug(f"Removing quote confirmation for user {user}: {self.__confirmations[user]}")
                     self.__confirmations.pop(user)
@@ -121,5 +121,5 @@ class QuotablePlugin(plugin.Plugin):
                     self.__confirmations.pop(user)
                     responses.append(self.__build_message("Okay, request cancelled. :speak_no_evil:", channel))
             else:
-                responses.append(self.__build_message(f":thinking_face: Ummm... I don't think there's anything to {text.lower()}...", channel))
+                responses.append(self.__build_message(f":thinking_face: Ummm... I don't think there's any quote to {text.lower().split()[0]}...", channel))
         return responses

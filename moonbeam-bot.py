@@ -8,6 +8,7 @@ from plugins.dice import DicePlugin
 from plugins.help import HelpPlugin
 from plugins.moonbeam import MoonbeamPlugin
 from plugins.quotable import QuotablePlugin
+from plugins.trigger import TriggerPlugin
 
 from slack import RTMClient
 from slack.errors import SlackApiError
@@ -18,8 +19,9 @@ import os
 from time import sleep
 
 class Moonbeam:
-    def __init__(self, *, plugins: list=list()):
+    def __init__(self, *, plugins: list=list(), no_bot_plugins: list=list()):
         self.__plugins = plugins
+        self.__no_bot_plugins = no_bot_plugins
         logging.basicConfig(
             level=os.environ.get("LOGLEVEL", "DEBUG"),
             format='%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s',
@@ -50,8 +52,8 @@ class Moonbeam:
             self.__log.exception(f"Encountered a Slack API Error posting message: {e.response['error']}")
 
 
-    def __plugin_message(self, request):
-        for plugin in self.__plugins:
+    def __plugin_message(self, request, plugins):
+        for plugin in plugins:
             try:
                 for response in plugin.receive(request):
                     self.__post_message(response)
@@ -65,7 +67,8 @@ class Moonbeam:
         if message and 'text' in message.keys() and not message.get('is_ephemeral'):
             self.__log.info(json.dumps(message, indent=2))
             if message.get('bot_id') != self.__config.get("BOT_ID") and message.get('username') != "slackbot":
-                self.__plugin_message(message)
+                self.__plugin_message(message, self.__no_bot_plugins)
+            self.__plugin_message(message, self.__plugins)
         else:
             self.__log.debug("Not responding to message:")
             self.__log.debug(json.dumps(message, indent=2))
@@ -74,13 +77,16 @@ class Moonbeam:
 if __name__ == "__main__":
     moonbeam = Moonbeam(
         plugins={
+            DBStorePlugin(),
+        },
+        no_bot_plugins={
             AutoScooglePlugin(),
             CommandPlugin(),
             COVIDPlugin(),
-            DBStorePlugin(),
             DicePlugin(),
             HelpPlugin(),
             MoonbeamPlugin(),
             QuotablePlugin(),
+            TriggerPlugin(),
         },
     )
