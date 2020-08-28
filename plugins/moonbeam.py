@@ -5,26 +5,20 @@ import json
 
 
 class MoonbeamPlugin(plugin.Plugin):
-    __moonbeams = [
-        {
-            "name": "Moonbeam",
-            "image_url": "https://slack-files.com/T0TGU21T2-FFYTWBGA2-4e153c7af7",
-            "frequency_score": 3,
-            "words": None
-        },
-        {
-            "name": "Super Moonbeam",
-            "image_url": "https://slack-files.com/T0TGU21T2-FFWT7PSF3-b6f941711f",
-            "freqency_score": 2,
-            "words": None
-        },
-    ]
-
-
     def __init__(self):
         super().__init__()
         with open(self._config.get('WORDS_FILE'), 'r') as f:
             self.__words = json.load(f)
+        self.__moonbeams = [
+            {
+                "name": "Moonbeam",
+                "image_url": self._config['MOONBEAM_IMAGE_URLS'][0],
+            },
+            {
+                "name": "Super Moonbeam",
+                "image_url": self._config['MOONBEAM_IMAGE_URLS'][1],
+            },
+        ]
         self.__reset_moonbeam()
 
 
@@ -88,7 +82,7 @@ class MoonbeamPlugin(plugin.Plugin):
                         responses.append(
                             {
                                 'channel': request['channel'],
-                                'text': f"{moonbeam['name']} because: *{word}*\n{moonbeam['image_url']}",
+                                'text': f"{moonbeam['name']} because: *{word}*\n{moonbeam.get('image_url')}",
                             }
                         )
                         self.__reset_moonbeam(moonbeam['name'])

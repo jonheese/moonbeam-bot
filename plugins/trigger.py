@@ -92,7 +92,7 @@ class TriggerPlugin(plugin.Plugin):
             if command_index >= 0:
                 try:
                     trigger_and_reply = " ".join(words[command_index+1:])
-                    trigger = trigger_and_reply.split(' - ')[0].lower()
+                    trigger = trigger_and_reply.split(' - ')[0]
                     reply = trigger_and_reply.split(' - ')[1]
                     dupe_trigger = self.__add_trigger(trigger, reply)
                     if not dupe_trigger:
