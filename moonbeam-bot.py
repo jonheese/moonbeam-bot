@@ -30,7 +30,9 @@ class Moonbeam:
         self.__log.info("Starting moonbeam")
         with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
             self.__config = json.load(f)
-        rtm_client = RTMClient(token=self.__config.get("BOT_TOKEN"))
+        rtm_client = RTMClient(
+            token=self.__config.get("BOT_TOKEN"),
+        )
         rtm_client.run_on(event='message')(self.__process_message)
         rtm_client.start()
 

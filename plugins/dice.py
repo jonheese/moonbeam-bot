@@ -34,7 +34,7 @@ class DicePlugin(plugin.Plugin):
 
     def receive(self, request):
         responses = []
-        if request['text'].lower().startswith("moonbeam") and "roll" in request['text']:
+        if request['text'].lower().startswith("moonbeam") and "roll" in request['text'].split():
             orig_words = request['text'].split()[1:]
             words = request['text'].lower().split()[1:]
             rude = False
