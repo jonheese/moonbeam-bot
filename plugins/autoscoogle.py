@@ -1,10 +1,12 @@
 from . import plugin
 from urllib.parse import quote
 
+import json
+
 class AutoScooglePlugin(plugin.Plugin):
     def __init__(self):
         super().__init__()
-
+        self._load_config_vars(['AUTOSCOOGLE_USERS', 'AUTOSCOOGLE_TRIGGERS'])
 
     def receive(self, request):
         responses = []

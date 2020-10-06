@@ -7,6 +7,12 @@ import json
 class MoonbeamPlugin(plugin.Plugin):
     def __init__(self):
         super().__init__()
+        self._load_config_vars([
+            'WORDS_FILE',
+            'MOONBEAM_IMAGE_URLS',
+            'MASTER_CHANNEL_ID',
+            'MASTER_ID',
+        ])
         with open(self._config.get('WORDS_FILE'), 'r') as f:
             self.__words = json.load(f)
         self.__moonbeams = [
@@ -26,7 +32,7 @@ class MoonbeamPlugin(plugin.Plugin):
         for moonbeam in self.__moonbeams:
             if moonbeam_name == None or moonbeam['name'] == moonbeam_name:
                 self._log.info(f"Initializing {moonbeam['name']}")
-                moonbeam['words'] = self.__get_ten_new_words()
+                moonbeam['words'] = self.__select_new_words()
 
 
     def __get_moonbeam_words(self, moonbeam_name=None):
@@ -37,16 +43,16 @@ class MoonbeamPlugin(plugin.Plugin):
         return message[:-1]
 
 
-    def __get_ten_new_words(self):
-        ten_words = []
+    def __select_new_words(self):
+        selected_words = []
         count = 0
-        while count < 10:
+        while count < 5:
             seed()
             rand_id = randint(0, len(self.__words)-1)
-            ten_words.append(self.__words[rand_id]["word"])
+            selected_words.append(self.__words[rand_id]["word"])
             count = count + 1
-        self._log.debug(ten_words)
-        return ten_words
+        self._log.debug(selected_words)
+        return selected_words
 
 
     def receive(self, request):

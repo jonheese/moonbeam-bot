@@ -5,8 +5,7 @@ import json
 class CommandPlugin(plugin.Plugin):
     def __init__(self):
         super().__init__()
-        with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
-            self._config = json.load(f)
+        self._load_config_vars(['MASTER_CHANNEL_ID', 'MASTER_ID'])
 
 
     def receive(self, request):

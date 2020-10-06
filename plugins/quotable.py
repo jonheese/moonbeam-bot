@@ -6,6 +6,7 @@ class QuotablePlugin(plugin.Plugin):
     def __init__(self):
         super().__init__()
         self.__confirmations = {}
+        self._load_config_vars(['QUOTES_FILE'])
 
 
     def __read_quotes(self):

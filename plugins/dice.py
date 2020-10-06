@@ -8,6 +8,7 @@ import re
 class DicePlugin(plugin.Plugin):
     def __init__(self):
         super().__init__()
+        self._load_config_vars(['PLEASANTRIES_FILE'])
         with open(self._config.get('PLEASANTRIES_FILE'), 'r') as f:
             self.__pleasantries = json.load(f)
 

@@ -1,12 +1,12 @@
 from . import plugin
 from random import randint, seed
-from traceback import print_stack
 import json
 import re
 
 class TriggerPlugin(plugin.Plugin):
     def __init__(self):
         super().__init__()
+        self._load_config_vars(['TRIGGERS_FILE'])
         self.__triggers = self.__read_triggers()
         self.__confirmations = {}
 

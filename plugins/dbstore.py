@@ -6,6 +6,12 @@ import mysql.connector
 class DBStorePlugin(plugin.Plugin):
     def __init__(self):
         super().__init__()
+        self._load_config_vars([
+            'DB_HOST',
+            'DB_NAME',
+            'DB_USER',
+            'DB_PASSWORD',
+        ])
         self.__init_db()
         self.__cache = None
 

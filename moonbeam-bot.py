@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3
 
+from plugins.archive import ArchivePlugin
 from plugins.autoscoogle import AutoScooglePlugin
 from plugins.command import CommandPlugin
 from plugins.covid import COVIDPlugin
@@ -28,8 +29,13 @@ class Moonbeam:
         )
         self.__log = logging.getLogger(type(self).__name__)
         self.__log.info("Starting moonbeam")
-        with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
-            self.__config = json.load(f)
+        try:
+            with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
+                self.__config = json.load(f)
+        except:
+            self.__config = {}
+            self.__config['BOT_TOKEN'] = os.environ.get('BOT_TOKEN')
+            self.__config['BOT_ID'] = os.environ.get('BOT_ID')
         rtm_client = RTMClient(
             token=self.__config.get("BOT_TOKEN"),
         )
@@ -82,6 +88,7 @@ if __name__ == "__main__":
             DBStorePlugin(),
         },
         no_bot_plugins={
+            ArchivePlugin(),
             AutoScooglePlugin(),
             CommandPlugin(),
             COVIDPlugin(),
