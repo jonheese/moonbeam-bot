@@ -4,7 +4,7 @@ services:
   moonbeam-bot:
     container_name: moonbeam-bot
     build: .
-    image: moonbeam-bot:latest
+    image: jonheese/moonbeam-bot:latest
     environment:
       - BOT_ID=${BOT_ID}
       - BOT_TOKEN=${BOT_TOKEN}
@@ -22,3 +22,4 @@ services:
       - AUTOSCOOGLE_USERS=${AUTOSCOOGLE_USERS}
       - AUTOSCOOGLE_TRIGGERS=${AUTOSCOOGLE_TRIGGERS}
     network_mode: "bridge"
+    restart: always
