@@ -10,6 +10,7 @@ from plugins.help import HelpPlugin
 from plugins.moonbeam import MoonbeamPlugin
 from plugins.quotable import QuotablePlugin
 from plugins.trigger import TriggerPlugin
+from plugins.weather import WeatherPlugin
 
 from slack import RTMClient
 from slack.errors import SlackApiError
@@ -97,5 +98,6 @@ if __name__ == "__main__":
             MoonbeamPlugin(),
             QuotablePlugin(),
             TriggerPlugin(),
+            WeatherPlugin(),
         },
     )

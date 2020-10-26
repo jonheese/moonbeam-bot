@@ -21,5 +21,6 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - AUTOSCOOGLE_USERS=${AUTOSCOOGLE_USERS}
       - AUTOSCOOGLE_TRIGGERS=${AUTOSCOOGLE_TRIGGERS}
+      - WT360_API_KEY=${WT360_API_KEY}
     network_mode: "bridge"
     restart: always

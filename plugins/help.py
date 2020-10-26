@@ -17,6 +17,7 @@ class HelpPlugin(plugin.Plugin):
                             "`Moonbeam add-quote <quote> - <attribution>` - Add a quote to the Quotable database\n" + \
                             "`Moonbeam add-trigger <trigger> - <reply>` - Add a trigger/reply to my trigger database (NOTE: Multiple replies can be given for a single trigger with subsequent requests and replies will be chosen at random when triggered)\n" + \
                             "`Moonbeam archive <search-string>` - Return a link to search the Slack archive for the given search string\n" + \
+                            "`Moonbeam weather [[N] <period-type>] [zipcode]` - Return WT360 weather forecast for the optional _N_ time periods of _period-type_ (default 5 days) and optional _zipcode_ (default 18104)\n" + \
                             "`covid-deaths` - Return the current COVID-19 death rates for the world and the US\n" + \
                             "`covid-cases` - Return the current COVID-19 case rates for the world and the US\n" + \
                             "`covid-recovery` - Return the current COVID-19 recovery rates for the world and the US\n" + \

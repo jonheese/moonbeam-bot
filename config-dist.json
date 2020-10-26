@@ -21,5 +21,6 @@
     "AUTOSCOOGLE_TRIGGERS": [
         "some trigger",
         "some other trigger"
-    ]
+    ],
+    "WT360_API_KEY": "APIKEY"
 }
