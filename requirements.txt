@@ -1,4 +1,4 @@
-mysql-connector-python==8.0.20
+mysql-connector-python==8.0.22
 profanity==1.1
 requests==2.24.0
-slackclient==2.0.1
+slackclient==2.9.3

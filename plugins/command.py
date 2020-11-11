@@ -2,13 +2,10 @@ from . import plugin
 import json
 
 
-class CommandPlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
-        self._load_config_vars(['MASTER_CHANNEL_ID', 'MASTER_ID'])
-
-
+class CommandPlugin(plugin.NoBotPlugin):
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         responses = []
         # Check for master command
         if request.get('channel') == self._config.get("MASTER_CHANNEL_ID") and \

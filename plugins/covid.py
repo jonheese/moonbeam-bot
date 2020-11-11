@@ -2,8 +2,7 @@ import requests
 from time import time
 from . import plugin
 
-class COVIDPlugin(plugin.Plugin):
-
+class COVIDPlugin(plugin.NoBotPlugin):
     __covid_stats = {
         'world': {
             'deaths': -1,
@@ -20,7 +19,6 @@ class COVIDPlugin(plugin.Plugin):
 
 
     def __get_covid_stats(self):
-        super().__init__()
         if self.__covid_stats['timestamp'] + 60 >= time():
             return
         tmpfile = '/tmp/states.csv'
@@ -78,6 +76,8 @@ class COVIDPlugin(plugin.Plugin):
 
 
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         channel, text = (request['channel'], request['text'])
         messages = []
         if "covid-stats" in text.lower():

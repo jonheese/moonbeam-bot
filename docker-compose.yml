@@ -6,21 +6,24 @@ services:
     build: .
     image: jonheese/moonbeam-bot:latest
     environment:
-      - BOT_ID=${BOT_ID}
-      - BOT_TOKEN=${BOT_TOKEN}
-      - MASTER_ID=${MASTER_ID}
-      - MASTER_CHANNEL_ID=${MASTER_CHANNEL_ID}
-      - MOONBEAM_IMAGE_URLS=${MOONBEAM_IMAGE_URLS}
-      - QUOTES_FILE=${QUOTES_FILE}
-      - TRIGGERS_FILE=${TRIGGERS_FILE}
-      - PLEASANTRIES_FILE=${PLEASANTRIES_FILE}
-      - WORDS_FILE=${WORDS_FILE}
-      - DB_HOST=${DB_HOST}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - AUTOSCOOGLE_USERS=${AUTOSCOOGLE_USERS}
-      - AUTOSCOOGLE_TRIGGERS=${AUTOSCOOGLE_TRIGGERS}
-      - WT360_API_KEY=${WT360_API_KEY}
+      - Moonbeam_PLUGINS=${Moonbeam_PLUGINS}
+      - Moonbeam_BOT_ID=${Moonbeam_BOT_ID}
+      - Moonbeam_BOT_TOKEN=${Moonbeam_BOT_TOKEN}
+      - CommandPlugin_MASTER_ID=${CommandPlugin_MASTER_ID}
+      - CommandPlugin_MASTER_CHANNEL_ID=${CommandPlugin_MASTER_CHANNEL_ID}
+      - MoonbeamPlugin_MASTER_ID=${MoonbeamPlugin_MASTER_ID}
+      - MoonbeamPlugin_MASTER_CHANNEL_ID=${MoonbeamPlugin_MASTER_CHANNEL_ID}
+      - MoonbeamPlugin_MOONBEAM_IMAGE_URLS=${MoonbeamPlugin_MOONBEAM_IMAGE_URLS}
+      - MoonbeamPlugin_WORDS_FILE=${MoonbeamPlugin_WORDS_FILE}
+      - QuotablePlugin_QUOTES_FILE=${QuotablePlugin_QUOTES_FILE}
+      - TriggerPlugin_TRIGGERS_FILE=${TriggerPlugin_TRIGGERS_FILE}
+      - DicePlugin_PLEASANTRIES_FILE=${DicePlugin_PLEASANTRIES_FILE}
+      - DBStorePlugin_DB_HOST=${DBStorePlugin_DB_HOST}
+      - DBStorePlugin_DB_NAME=${DBStorePlugin_DB_NAME}
+      - DBStorePlugin_DB_USER=${DBStorePlugin_DB_USER}
+      - DBStorePlugin_DB_PASSWORD=${DBStorePlugin_DB_PASSWORD}
+      - AutoScooglePlugin_AUTOSCOOGLE_USERS=${AutoScooglePlugin_AUTOSCOOGLE_USERS}
+      - AutoScooglePlugin_AUTOSCOOGLE_TRIGGERS=${AutoScooglePlugin_AUTOSCOOGLE_TRIGGERS}
+      - WeatherPlugin_WT360_API_KEY=${WeatherPlugin_WT360_API_KEY}
     network_mode: "bridge"
     restart: always

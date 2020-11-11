@@ -1,26 +1,64 @@
 {
-    "BOT_ID": "MOONBEAM_BOT_ID",
-    "BOT_TOKEN": "xoxb-MOONBEAM_BOT_TOKEN",
-    "MASTER_ID": "ADMIN_ID",
-    "MASTER_CHANNEL_ID": "ADMIN_DM_CHANNEL_ID",
-    "MOONBEAM_IMAGE_URLS": [
-        "http://whatever.com/moonbeam.jpg",
-        "http://whatever.com/super-moonbeam.jpg"
-    ],
-    "QUOTES_FILE": "/usr/local/moonbeam-bot/quotes.json",
-    "PLEASANTRIES_FILE": "/usr/local/moonbeam-bot/pleasantries.json",
-    "WORDS_FILE": "/usr/local/moonbeam-bot/words.json",
-    "DB_HOST": "localhost",
-    "DB_NAME": "slack_archive",
-    "DB_USER": "slack_archive",
-    "DB_PASSWORD": "PASSWORD",
-    "AUTOSCOOGLE_USERS": [
-        "SLACKUSERID",
-        "ANOTHERONE"
-    ],
-    "AUTOSCOOGLE_TRIGGERS": [
-        "some trigger",
-        "some other trigger"
-    ],
-    "WT360_API_KEY": "APIKEY"
+    "Moonbeam": {
+        "PLUGINS": [
+            "plugins.archive.ArchivePlugin",
+            "plugins.autoscoogle.AutoScooglePlugin",
+            "plugins.command.CommandPlugin",
+            "plugins.covid.COVIDPlugin",
+            "plugins.dbstore.DBStorePlugin",
+            "plugins.dice.DicePlugin",
+            "plugins.help.HelpPlugin",
+            "plugins.moonbeam.MoonbeamPlugin",
+            "plugins.quotable.QuotablePlugin",
+            "plugins.trigger.TriggerPlugin",
+            "plugins.weather.WeatherPlugin"
+        ],
+        "BOT_ID": "MOONBEAM_BOT_ID",
+        "BOT_TOKEN": "xoxb-MOONBEAM_BOT_TOKEN"
+    },
+    "CommandPlugin": {
+        "MASTER_ID": "ADMIN_ID",
+        "MASTER_CHANNEL_ID": "ADMIN_DM_CHANNEL_ID"
+    },
+    "MoonbeamPlugin": {
+        "MOONBEAM_IMAGE_URLS": [
+            "http://whatever.com/moonbeam.jpg",
+            "http://whatever.com/super-moonbeam.jpg"
+        ],
+        "WORDS_FILE": "words.json",
+        "MASTER_ID": "ADMIN_ID",
+        "MASTER_CHANNEL_ID": "ADMIN_DM_CHANNEL_ID"
+    },
+    "QuotablePlugin": {
+        "QUOTES_FILE": "quotes.json"
+    },
+    "TriggerPlugin": {
+        "TRIGGERS_FILE": "triggers.json"
+    },
+    "DicePlugin": {
+        "PLEASANTRIES_FILE": "pleasantries.json"
+    },
+    "DBStorePlugin" : {
+        "DB_HOST": "localhost",
+        "DB_NAME": "slack_archive",
+        "DB_USER": "slack_archive",
+        "DB_PASSWORD": "PASSWORD"
+    },
+    "AutoScooglePlugin": {
+        "AUTOSCOOGLE_USERS": [
+            "SLACKUSERID",
+            "ANOTHERONE"
+        ],
+        "AUTOSCOOGLE_TRIGGERS": [
+            "what is ",
+            "what are ",
+            "wtf is ",
+            "wtf are ",
+            "what the fuck is ",
+            "what the fuck are "
+        ]
+    },
+    "WeatherPlugin": {
+        "WT360_API_KEY": "API_KEY"
+    }
 }

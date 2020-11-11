@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# WARNING!
+# This file is part of the legacy Moonbeam-bot launching mechanism
+# It should not be used anymore, but is left here for posterity
+
+
 #set -x
 CONF_FILE="/etc/default/moonbeam-bot"
 CONF_FILE_MISSING="Create file $CONF_FILE with (at least) the \$EXEC variable defined (eg. /usr/bin/python3 -u /usr/local/moonbeam-bot/moonbeam-bot.py)."

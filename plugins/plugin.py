@@ -1,28 +1,32 @@
+import json
 import logging
 import os
-import json
 
 
 class Plugin:
-    def __init__(self):
+    def __init__(self, web_client, plugin_config):
         logging.basicConfig(
             level=os.environ.get("LOGLEVEL", "DEBUG"),
             format='%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s',
         )
         self._log = logging.getLogger(type(self).__name__)
-        try:
-            with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
-                self._config = json.load(f)
-        except:
+        if plugin_config:
+            self._config = plugin_config
+        else:
             self._config = {}
+        self._web_client = web_client
 
-    def _load_config_vars(self, names):
-        for name in names:
-            if self._config.get(name) is None:
-                try:
-                    self._config[name] = json.loads(os.environ.get(name, ""))
-                except json.decoder.JSONDecodeError:
-                    self._config[name] = os.environ.get(name, "")
 
     def receive(self, message):
         pass
+
+
+class NoBotPlugin(Plugin):
+    def receive(self, message):
+        if message and 'text' in message.keys() and not message.get('is_ephemeral'):
+            if message.get('bot_id') != self._config.get("BOT_ID") and message.get('username') != "slackbot":
+                return True
+            else:
+                return False
+        else:
+            return False

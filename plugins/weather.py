@@ -6,10 +6,9 @@ import math
 import re
 import requests
 
-class WeatherPlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
-        self._load_config_vars(['WT360_API_KEY'])
+class WeatherPlugin(plugin.NoBotPlugin):
+    def __init__(self, web_client, plugin_config):
+        super().__init__(web_client=web_client, plugin_config=plugin_config)
 
 
     def get_forecast(self, days, datecode, zipcode):
@@ -80,6 +79,8 @@ class WeatherPlugin(plugin.Plugin):
 
 
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         responses = []
         if request['text'].lower().startswith("moonbeam weather"):
             self._log.debug(f"Got weather request: {request['text']}")

@@ -1,11 +1,13 @@
 from . import plugin
 
-class HelpPlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
+class HelpPlugin(plugin.NoBotPlugin):
+    def __init__(self, web_client, plugin_config):
+        super().__init__(web_client=web_client, plugin_config=plugin_config)
 
 
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         responses = []
         if request['text'].lower().startswith("moonbeam help"):
             self._log.debug(f"Got help request: {request['text']}")

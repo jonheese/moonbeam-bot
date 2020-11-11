@@ -4,15 +4,9 @@ import os
 import json
 
 
-class MoonbeamPlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
-        self._load_config_vars([
-            'WORDS_FILE',
-            'MOONBEAM_IMAGE_URLS',
-            'MASTER_CHANNEL_ID',
-            'MASTER_ID',
-        ])
+class MoonbeamPlugin(plugin.NoBotPlugin):
+    def __init__(self, web_client, plugin_config):
+        super().__init__(web_client=web_client, plugin_config=plugin_config)
         with open(self._config.get('WORDS_FILE'), 'r') as f:
             self.__words = json.load(f)
         self.__moonbeams = [
@@ -56,6 +50,8 @@ class MoonbeamPlugin(plugin.Plugin):
 
 
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         responses = []
         # Check for master command
         if request.get('channel') == self._config.get("MASTER_CHANNEL_ID") and \

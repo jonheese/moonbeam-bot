@@ -1,47 +1,33 @@
 #!/usr/local/bin/python3
 
-from plugins.archive import ArchivePlugin
-from plugins.autoscoogle import AutoScooglePlugin
-from plugins.command import CommandPlugin
-from plugins.covid import COVIDPlugin
-from plugins.dbstore import DBStorePlugin
-from plugins.dice import DicePlugin
-from plugins.help import HelpPlugin
-from plugins.moonbeam import MoonbeamPlugin
-from plugins.quotable import QuotablePlugin
-from plugins.trigger import TriggerPlugin
-from plugins.weather import WeatherPlugin
-
-from slack import RTMClient
+from slack import RTMClient, WebClient
 from slack.errors import SlackApiError
 
 import json
 import logging
 import os
-from time import sleep
+from importlib import import_module
+
 
 class Moonbeam:
-    def __init__(self, *, plugins: list=list(), no_bot_plugins: list=list()):
-        self.__plugins = plugins
-        self.__no_bot_plugins = no_bot_plugins
+    def __init__(self):
         logging.basicConfig(
             level=os.environ.get("LOGLEVEL", "DEBUG"),
             format='%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s',
         )
         self.__log = logging.getLogger(type(self).__name__)
-        self.__log.info("Starting moonbeam")
-        try:
-            with open('/usr/local/moonbeam-bot/config.json', 'r') as f:
-                self.__config = json.load(f)
-        except:
-            self.__config = {}
-            self.__config['BOT_TOKEN'] = os.environ.get('BOT_TOKEN')
-            self.__config['BOT_ID'] = os.environ.get('BOT_ID')
-        rtm_client = RTMClient(
+        self.__log.info("Starting Moonbeam")
+        self.__config = self.__load_config(prefix="Moonbeam")
+        self.__web_client = WebClient(self.__config['BOT_TOKEN'])
+        self.__rtm_client = RTMClient(
             token=self.__config.get("BOT_TOKEN"),
+            ping_interval=30,
+            auto_reconnect=True,
         )
-        rtm_client.run_on(event='message')(self.__process_message)
-        rtm_client.start()
+        self.__plugins = []
+        self.__load_plugins(self.__config.get("PLUGINS"))
+        self.__rtm_client.run_on(event='message')(self.__process_message)
+        self.__rtm_client.start()
 
 
     def __post_message(self, response):
@@ -49,7 +35,7 @@ class Moonbeam:
         text = response.get('text')
         attachments = response.get('attachments')
         as_user = response.get('as_user')
-        self.__log.info(f"posting message in channel {channel} (as_user={as_user}):")
+        self.__log.info(f"Posting message in channel {channel} (as_user={as_user}):")
         try:
             slack_response = self.__web_client.chat_postMessage(
                 channel=channel,
@@ -61,43 +47,69 @@ class Moonbeam:
             self.__log.exception(f"Encountered a Slack API Error posting message: {e.response['error']}")
 
 
-    def __plugin_message(self, request, plugins):
-        for plugin in plugins:
+    def __process_message(self, **payload):
+        message = payload['data']
+        self.__web_client = payload['web_client']
+        self.__log.info(json.dumps(message, indent=2))
+        for plugin in self.__plugins:
             try:
-                for response in plugin.receive(request):
-                    self.__post_message(response)
+                responses = plugin.receive(message)
+                if responses is False:
+                    self.__log.debug(f"{plugin.__class__.__name__} refusing to process message")
+                else:
+                    for response in responses:
+                        self.__post_message(response)
             except Exception as e:
                 self.__log.exception(f"Encountered an exception responding to message: {e}")
 
 
-    def __process_message(self, **payload):
-        message = payload['data']
-        self.__web_client = payload['web_client']
-        if message and 'text' in message.keys() and not message.get('is_ephemeral'):
-            self.__log.info(json.dumps(message, indent=2))
-            if message.get('bot_id') != self.__config.get("BOT_ID") and message.get('username') != "slackbot":
-                self.__plugin_message(message, self.__no_bot_plugins)
-            self.__plugin_message(message, self.__plugins)
-        else:
-            self.__log.debug("Not responding to message:")
-            self.__log.debug(json.dumps(message, indent=2))
+    def __load_config(self, prefix):
+        config = {}
+        config_file = os.path.join(os.path.dirname(__file__), 'config.json')
+        if os.path.isfile(config_file):
+            try:
+                with open(os.path.join(os.path.dirname(__file__), 'config.json'), 'r') as f:
+                    config = json.load(f)
+            except Exception as e:
+                self.__log.warn(e)
+        for key, value in os.environ.items():
+            if key.startswith(f"{prefix}_"):
+                subkey = "_".join(key.split('_')[1:])
+                try:
+                    config[subkey] = json.loads(value)
+                except json.decoder.JSONDecodeError:
+                    config[subkey] = value
+        return config
+
+
+    def __load_plugins(self, active_plugins):
+        if not active_plugins:
+            self.__log.debug("No plugins specified in config file/environment variables")
+            return
+
+        if isinstance(active_plugins, str):
+            active_plugins = active_plugins.split(",")
+
+        for plugin_path in active_plugins:
+            try:
+                module_path, class_name = plugin_path.rsplit('.', 1)
+                module = import_module(module_path)
+                cls = getattr(module, class_name)
+            except AttributeError:
+                raise ImportError(f"Module {module_path} does not define a \"{class_name}\" attribute/class")
+            except ValueError:
+                raise ImportError(f"{plugin_path} doesn't look like a module path")
+            except ImportError as error:
+                self.__log.exception(f"Problem importing {plugin_path} - {error}")
+            plugin_config = self.__config.get(cls.__name__, {})
+            if not plugin_config:
+                plugin_config = self.__load_config(prefix=cls.__name__)
+            plugin_config['BOT_ID'] = self.__config['BOT_ID']
+            self.__log.debug(f"Loading class {cls.__name__}")
+            plugin = cls(web_client=self.__web_client, plugin_config=plugin_config)
+            self.__plugins.append(plugin)
+            self.__log.debug(f"Plugin registered: {plugin}")
 
 
 if __name__ == "__main__":
-    moonbeam = Moonbeam(
-        plugins={
-            DBStorePlugin(),
-        },
-        no_bot_plugins={
-            ArchivePlugin(),
-            AutoScooglePlugin(),
-            CommandPlugin(),
-            COVIDPlugin(),
-            DicePlugin(),
-            HelpPlugin(),
-            MoonbeamPlugin(),
-            QuotablePlugin(),
-            TriggerPlugin(),
-            WeatherPlugin(),
-        },
-    )
+    moonbeam = Moonbeam()

@@ -4,14 +4,8 @@ import json
 import mysql.connector
 
 class DBStorePlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
-        self._load_config_vars([
-            'DB_HOST',
-            'DB_NAME',
-            'DB_USER',
-            'DB_PASSWORD',
-        ])
+    def __init__(self, web_client, plugin_config):
+        super().__init__(web_client=web_client, plugin_config=plugin_config)
         self.__init_db()
         self.__cache = None
 
@@ -236,6 +230,8 @@ class DBStorePlugin(plugin.Plugin):
     def receive(self, request):
         try:
             self.__store_message(request)
+        except mysql.connector.errors.IntegrityError as ie:
+            self._log.warning(f"Refusing to insert duplicate message: {ie}")
         except Exception as e:
             self._log.exception(e)
         return []

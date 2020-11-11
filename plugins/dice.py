@@ -2,15 +2,19 @@ from . import plugin
 from profanity import profanity
 from random import randint, seed
 import json
+import os
 import re
 
 
-class DicePlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
-        self._load_config_vars(['PLEASANTRIES_FILE'])
-        with open(self._config.get('PLEASANTRIES_FILE'), 'r') as f:
-            self.__pleasantries = json.load(f)
+class DicePlugin(plugin.NoBotPlugin):
+    def __init__(self, web_client, plugin_config):
+        super().__init__(web_client=web_client, plugin_config=plugin_config)
+        pleasantries_file = self._config.get('PLEASANTRIES_FILE')
+        if pleasantries_file:
+            with open(os.path.join(os.path.dirname(__file__), "..", pleasantries_file), 'r') as f:
+                self.__pleasantries = json.load(f)
+        else:
+            raise RuntimeError(f"Unable to locate pleasantries file {pleasantries_file}")
 
 
     def __roll_dice(self, number, sides):
@@ -34,6 +38,8 @@ class DicePlugin(plugin.Plugin):
 
 
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         responses = []
         if request['text'].lower().startswith("moonbeam") and "roll" in request['text'].split():
             orig_words = request['text'].split()[1:]

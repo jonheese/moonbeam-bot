@@ -2,11 +2,10 @@ from . import plugin
 from random import randint, seed
 import json
 
-class QuotablePlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
+class QuotablePlugin(plugin.NoBotPlugin):
+    def __init__(self, web_client, plugin_config):
+        super().__init__(web_client=web_client, plugin_config=plugin_config)
         self.__confirmations = {}
-        self._load_config_vars(['QUOTES_FILE'])
 
 
     def __read_quotes(self):
@@ -77,6 +76,8 @@ class QuotablePlugin(plugin.Plugin):
 
 
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         responses = []
         text = request['text']
         channel = request['channel']

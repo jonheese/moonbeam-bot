@@ -1,12 +1,10 @@
 from . import plugin
 from urllib.parse import quote_plus
 
-class ArchivePlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
-
-
+class ArchivePlugin(plugin.NoBotPlugin):
     def receive(self, request):
+        if super().receive(request) is False:
+            return False
         responses = []
         if request['text'].lower().startswith("moonbeam archive"):
             self._log.debug(f"Got archive request: {request['text']}")
