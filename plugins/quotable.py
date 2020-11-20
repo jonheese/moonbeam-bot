@@ -3,11 +3,6 @@ from random import randint, seed
 import json
 
 class QuotablePlugin(plugin.NoBotPlugin):
-    def __init__(self, web_client, plugin_config):
-        super().__init__(web_client=web_client, plugin_config=plugin_config)
-        self.__confirmations = {}
-
-
     def __read_quotes(self):
         with open(self._config.get('QUOTES_FILE'), 'r') as f:
             return json.load(f)
@@ -107,6 +102,8 @@ class QuotablePlugin(plugin.NoBotPlugin):
                         responses.append(self.__get_quote_message(channel, dupe_quote))
                         responses.append(self.__build_message(f"If you are sure you still want to add it, send me a DM saying \"add quote\" and I'll take care of it for you. :thumbsup:\n" + \
                                          "Otherwise, you can send me a DM saying \"cancel quote\" and we'll forget this ever happened. :wink:", channel))
+                        if not self.hasattr(self, '__confirmations'):
+                            self.__confirmations = {}
                         self.__confirmations[user] = quote
                 except Exception as e:
                     self._log.exception(e)
@@ -114,6 +111,8 @@ class QuotablePlugin(plugin.NoBotPlugin):
             else:
                 responses.append(self.__show_usage(request))
         if text.lower() == "add quote" or text.lower() == "cancel quote":
+            if not self.hasattr(self, '__confirmations'):
+                self.__confirmations = {}
             if user in self.__confirmations.keys():
                 if text.lower() == "add quote":
                     responses = self.__add_success(request, self.__confirmations[user], responses)

@@ -12,7 +12,7 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
         if user in self._config.get("AUTOSCOOGLE_USERS"):
             # Potential auto-scoogle request
             subject = None
-            text = request.get('text', '')
+            text = request.get('text', '').lower()
             for trigger in self._config['AUTOSCOOGLE_TRIGGERS']:
                 if trigger in text.lower():
                     subject = text.split(trigger)[1]

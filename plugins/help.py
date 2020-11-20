@@ -1,10 +1,6 @@
 from . import plugin
 
 class HelpPlugin(plugin.NoBotPlugin):
-    def __init__(self, web_client, plugin_config):
-        super().__init__(web_client=web_client, plugin_config=plugin_config)
-
-
     def receive(self, request):
         if super().receive(request) is False:
             return False

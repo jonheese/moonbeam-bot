@@ -7,10 +7,6 @@ import re
 import requests
 
 class WeatherPlugin(plugin.NoBotPlugin):
-    def __init__(self, web_client, plugin_config):
-        super().__init__(web_client=web_client, plugin_config=plugin_config)
-
-
     def get_forecast(self, days, datecode, zipcode):
         forecast = []
         api_key = self._config.get('WT360_API_KEY')

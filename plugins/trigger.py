@@ -7,7 +7,6 @@ class TriggerPlugin(plugin.NoBotPlugin):
     def __init__(self, web_client, plugin_config):
         super().__init__(web_client=web_client, plugin_config=plugin_config)
         self.__triggers = self.__read_triggers()
-        self.__confirmations = {}
 
 
     def __read_triggers(self):
@@ -108,6 +107,8 @@ class TriggerPlugin(plugin.NoBotPlugin):
                         )
                         responses.append(self.__build_message(f"If you are sure you still want to add it, send me a DM saying \"add trigger\" and I'll take care of it for you. :thumbsup:\n" + \
                                          "Otherwise, you can send me a DM saying \"cancel trigger\" and we'll forget this ever happened. :wink:", channel))
+                        if not self.hasattr(self, '__confirmations'):
+                            self.__confirmations = {}
                         self.__confirmations[user] = (trigger, reply)
                 except Exception as e:
                     self._log.exception(e)
@@ -115,6 +116,8 @@ class TriggerPlugin(plugin.NoBotPlugin):
             else:
                 responses.append(self.__show_usage(request))
         if text.lower() == "add trigger" or text.lower() == "cancel trigger":
+            if not self.hasattr(self, '__confirmations'):
+                self.__confirmations = {}
             if user in self.__confirmations.keys():
                 if text.lower() == "add trigger":
                     (trigger, reply) = self.__confirmations[user]

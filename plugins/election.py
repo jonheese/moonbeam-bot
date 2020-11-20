@@ -6,7 +6,6 @@ import threading
 class ElectionPlugin(plugin.Plugin):
     def __init__(self, web_client, plugin_config):
         super().__init__(web_client=web_client, plugin_config=plugin_config)
-        self.__web_client = web_client
         self.__prediction = ''
         threading.Thread(target=self.__timer_thread, daemon=True).start()
 

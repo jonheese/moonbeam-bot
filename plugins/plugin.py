@@ -23,10 +23,9 @@ class Plugin:
 
 class NoBotPlugin(Plugin):
     def receive(self, message):
-        if message and 'text' in message.keys() and not message.get('is_ephemeral'):
-            if message.get('bot_id') != self._config.get("BOT_ID") and message.get('username') != "slackbot":
-                return True
-            else:
-                return False
+        # We want to ignore all ephemeral/empty messages and all messages from ourselves and Slackbot
+        if message and 'text' in message.keys() and not message.get('is_ephemeral') and \
+                message.get('bot_id') != self._config.get("BOT_ID") and message.get('username') != "slackbot":
+            return True
         else:
             return False

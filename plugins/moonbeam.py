@@ -7,7 +7,7 @@ import json
 class MoonbeamPlugin(plugin.NoBotPlugin):
     def __init__(self, web_client, plugin_config):
         super().__init__(web_client=web_client, plugin_config=plugin_config)
-        with open(self._config.get('WORDS_FILE'), 'r') as f:
+        with open(os.path.join(os.path.dirname(__file__), '..', self._config.get('WORDS_FILE')), 'r') as f:
             self.__words = json.load(f)
         self.__moonbeams = [
             {
