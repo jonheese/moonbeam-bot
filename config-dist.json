@@ -68,8 +68,8 @@
             ":eyes: <@#USER#> :eyes:",
             "Type much, <@#USER#>? :grin:"
         ],
-        "MAX_THRESHOLD_SECS": 30,
-        "RESPONSE_THRESHOLD_SECS": 15,
+        "MAX_THRESHOLD_SECS": 40,
+        "RESPONSE_THRESHOLD_SECS": 30,
         "COOLDOWN_SECS": 300
     }
 }
