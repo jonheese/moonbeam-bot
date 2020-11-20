@@ -21,6 +21,10 @@ class Plugin:
         pass
 
 
+    def typing(self, data):
+        pass
+
+
 class NoBotPlugin(Plugin):
     def receive(self, message):
         # We want to ignore all ephemeral/empty messages and all messages from ourselves and Slackbot
