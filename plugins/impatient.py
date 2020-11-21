@@ -39,12 +39,16 @@ class ImpatientPlugin(plugin.NoBotPlugin):
                 self._log.debug(f"Setting typing start timestamp for user {user} in {channel} to now because {interval} is greater than {max}")
             elif interval > min:
                 self._log.debug(f"Taunting user {user} in channel {channel} because {interval} is between {min} and {max}")
-                responses.append(
-                    {
-                        'channel': channel,
-                        'text': self.__get_quip(user),
-                    }
-                )
+                seed()
+                # Only actually taunt 1 time out of 10
+                if randint(0, 9) == 0:
+                    responses.append(
+                        {
+                            'channel': channel,
+                            'text': self.__get_quip(user),
+                        }
+                    )
+                # But still reset timers anyway
                 self.__typing_by_user_channel[user_channel] = 0
                 self.__taunts_by_user_channel[user_channel] = now
             else:
