@@ -66,7 +66,8 @@
             "Oh, here we go... :popcorn: <@#USER#>",
             "This oughta be rich, <@#USER#>! :popcorn:",
             ":eyes: <@#USER#> :eyes:",
-            "Type much, <@#USER#>? :grin:"
+            "Type much, <@#USER#>? :grin:",
+            "We're waiting, <@#USER#>... :neckbeard:"
         ],
         "MAX_THRESHOLD_SECS": 40,
         "RESPONSE_THRESHOLD_SECS": 30,
