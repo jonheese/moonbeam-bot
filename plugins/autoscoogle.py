@@ -2,6 +2,7 @@ from . import plugin
 from urllib.parse import quote
 
 import json
+import requests
 
 class AutoScooglePlugin(plugin.NoBotPlugin):
     def receive(self, request):
@@ -9,7 +10,8 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
             return False
         responses = []
         user = request['user']
-        if user in self._config.get("AUTOSCOOGLE_USERS"):
+        if user:
+        # if user in self._config.get("AUTOSCOOGLE_USERS"):
             # Potential auto-scoogle request
             subject = None
             text = request.get('text', '').lower()
@@ -20,11 +22,16 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
                         subject = subject.split("?")[0]
                     break
             if subject:
-                scoogle = f"I Auto-Scoogled that for you:\nhttp://www.google.com/search?q={quote(subject)}"
+                res = requests.get(f'https://www.google.com/search?q={quote(subject)}&btnI')
+                res.raise_for_status()
+                if res.url.startswith('https://www.google.com/url?q='):
+                    url = "=".join(res.url.split('=')[1:])
+                else:
+                    url = res.url
                 responses.append(
                     {
                         'channel': request['channel'],
-                        'text': scoogle,
+                        'text': f"I Auto-Scoogled that for you:\n{url}",
                     }
                 )
         return responses
