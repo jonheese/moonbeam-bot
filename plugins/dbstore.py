@@ -30,6 +30,19 @@ class DBStorePlugin(plugin.Plugin):
                 "channels": {},
                 "teams": {},
             }
+
+        if data.get("subtype") == "message_changed":
+            message = data.get("message")
+            if message:
+                client_msg_id = message.get("client_msg_id")
+                text = message.get("text")
+                if client_msg_id and text:
+                    self.__update_message(
+                        client_msg_id=client_msg_id,
+                        text=text,
+                    )
+            return
+
         timestamp = data["ts"].split(".")[0]
         #if "bot_id" in data.keys():
         #    return
@@ -43,6 +56,7 @@ class DBStorePlugin(plugin.Plugin):
             slack_team_id = data["team"]
         except KeyError as e:
             return
+        client_msg_id = data.get('client_msg_id')
         slack_channel_id = data["channel"]
         text = data["text"]
         files = []
@@ -71,7 +85,7 @@ class DBStorePlugin(plugin.Plugin):
             self.__cache["channels"][slack_channel_id] = channel_id
         else:
             channel_id = self.__cache["channels"][slack_channel_id]
-        message_id = self.__insert_message(team_id, channel_id, user_id, timestamp, text)
+        message_id = self.__insert_message(team_id, channel_id, user_id, timestamp, client_msg_id, text)
         self.__handle_files(files, message_id)
         if "user_profile" in data.keys():
             self.__handle_user_profile(data['user_profile'], user_id)
@@ -142,22 +156,33 @@ class DBStorePlugin(plugin.Plugin):
         return False
 
 
-    def __insert_message(self, team_id, channel_id, user_id, timestamp, text):
+    def __insert_message(self, team_id, channel_id, user_id, timestamp, client_msg_id, text):
         message_id = self.__get_message_id(timestamp, user_id)
         if message_id:
             return message_id
         if not self.__conn or not self.__conn.is_connected():
             self.__init_db()
         cursor = self.__conn.cursor()
-        query = "insert into tbl_messages (team_id, channel_id, user_id, timestamp, text) values (%s, %s, %s, %s, %s)"
+        query = "insert into tbl_messages (team_id, channel_id, user_id, timestamp, client_msg_id, text) values (%s, %s, %s, %s, %s, %s)"
         self._log.debug("Inserting message:")
-        self._log.debug(query % (team_id, channel_id, user_id, timestamp, text))
-        cursor.execute(query, (team_id, channel_id, user_id, timestamp, text))
+        self._log.debug(query % (team_id, channel_id, user_id, timestamp, client_msg_id, text))
+        cursor.execute(query, (team_id, channel_id, user_id, timestamp, client_msg_id, text))
         self.__conn.commit()
         cursor.close()
         message_id = self.__get_message_id(timestamp, user_id)
         self._log.debug(f"Got message ID : ({message_id})")
         return message_id
+
+
+    def __update_message(self, client_msg_id, text):
+        if not self.__conn or not self.__conn.is_connected():
+            self.__init_db()
+        cursor = self.__conn.cursor()
+        query = "update tbl_messages set text = %s where client_msg_id = %s"
+        self._log.debug(query % (text, client_msg_id))
+        cursor.execute(query, (text, client_msg_id))
+        self.__conn.commit()
+        cursor.close()
 
 
     def __insert_file(self, file_data):

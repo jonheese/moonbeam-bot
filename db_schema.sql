@@ -28,7 +28,7 @@ CREATE TABLE `tbl_channels` (
   `slack_channel_id` varchar(16) NOT NULL,
   `channel_name` varchar(64) NOT NULL,
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,7 +48,7 @@ CREATE TABLE `tbl_files` (
   `thumb_80` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6121 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6428 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -65,10 +65,12 @@ CREATE TABLE `tbl_messages` (
   `channel_id` smallint(6) NOT NULL,
   `timestamp` int(11) NOT NULL,
   `text` text COLLATE utf8mb4_unicode_ci,
+  `client_msg_id` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `team_id` (`team_id`,`user_id`,`channel_id`,`timestamp`,`text`(127)),
   KEY `idx_channel_name_timestamp` (`channel_id`,`timestamp`),
   FULLTEXT KEY `text` (`text`)
-) ENGINE=InnoDB AUTO_INCREMENT=231748 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=260311 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -83,7 +85,7 @@ CREATE TABLE `tbl_teams` (
   `slack_team_id` varchar(16) NOT NULL,
   `team_name` varchar(16) NOT NULL,
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -101,7 +103,7 @@ CREATE TABLE `tbl_users` (
   `team_id` tinyint(4) NOT NULL,
   `avatar_url` varchar(255) DEFAULT NULL,
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -113,4 +115,4 @@ CREATE TABLE `tbl_users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-10-06  9:45:38
+-- Dump completed on 2020-12-03 17:31:09
