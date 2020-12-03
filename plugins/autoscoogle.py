@@ -17,7 +17,7 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
             text = request.get('text', '').lower()
             for trigger in self._config['AUTOSCOOGLE_TRIGGERS']:
                 if trigger in text.lower():
-                    subject = text.split(trigger)[1]
+                    subject = trigger.join(text.split(trigger)[1:])
                     if "?" in subject:
                         subject = subject.split("?")[0]
                     break

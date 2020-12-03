@@ -55,7 +55,11 @@
             "wtf is ",
             "wtf are ",
             "what the fuck is ",
-            "what the fuck are "
+            "what the fuck are ",
+            "who is ",
+            "who are ",
+            "who tf is ",
+            "who tf are "
         ]
     },
     "WeatherPlugin": {
