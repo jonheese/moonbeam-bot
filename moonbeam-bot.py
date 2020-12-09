@@ -38,12 +38,21 @@ class Moonbeam:
         as_user = response.get('as_user')
         self.__log.info(f"Posting message in channel {channel} (as_user={as_user}):")
         try:
-            slack_response = self.__web_client.chat_postMessage(
-                channel=channel,
-                text=response.get('text'),
-                attachments=response.get('attachments'),
-                as_user=as_user,
-            )
+            if 'text' in response.keys():
+                slack_response = self.__web_client.chat_postMessage(
+                    channel=channel,
+                    text=response.get('text'),
+                    attachments=response.get('attachments'),
+                    as_user=as_user,
+                )
+            elif 'name' in response.keys():
+                slack_response = self.__web_client.reactions_add(
+                    channel=channel,
+                    name=response.get('name'),
+                    timestamp=response.get('timestamp'),
+                )
+            else:
+                raise RuntimeError(f"Unable to process response: {json.dumps(response, indent=2)}")
         except SlackApiError as e:
             self.__log.exception(f"Encountered a Slack API Error posting message: {e.response['error']}")
 
