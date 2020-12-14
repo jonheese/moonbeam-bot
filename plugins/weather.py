@@ -14,7 +14,8 @@ class WeatherPlugin(plugin.NoBotPlugin):
             return forecast
         url = f"http://api.wt360business.com/API/weather/daily/%7BZU{zipcode}%7D?" + \
                f"apiKey={api_key}&fmt=json&func=getSummaryInfo&calendar=julian&" + \
-               f"cnt={days}&units=f&sd={datecode}&avgTemp=1&prcp=1&maxTemp=1&minTemp=1"
+               f"cnt={days}&units=f&sd={datecode}&avgTemp=1&prcp=1&maxTemp=1&minTemp=1" + \
+               "&snow=1"
         data = requests.get(url).json()
         if data.get("status") != "success":
             return self.get_forecast(days, datecode, '92328')
@@ -26,10 +27,18 @@ class WeatherPlugin(plugin.NoBotPlugin):
             max_temp = day.get('maxTemp')
             min_temp = day.get('minTemp')
             prcp = day.get('prcp')
+            snow = day.get('snow')
             date_padding = (17 - len(date)) * " "
             high_padding = (4 - len(max_temp)) * " "
             low_padding = (4 - len(min_temp)) * " "
-            forecast.append(f"{date}:{date_padding} High: {day.get('maxTemp')}°F, {high_padding}Low: {day.get('minTemp')}°F,{low_padding} Precipitation: {day.get('prcp')}\"")
+            prcp_padding = (4 - len(prcp)) * " "
+            if snow:
+                forecast.append(f"{date}:{date_padding} High: {max_temp}°F, {high_padding}" +
+                                f"Low: {min_temp}°F,{low_padding} Precipitation: {prcp}\"" +
+                                f",{prcp_padding} Snow: {snow}\"")
+            else:
+                forecast.append(f"{date}:{date_padding} High: {max_temp}°F, {high_padding}" +
+                                f"Low: {min_temp}°F,{low_padding} Precipitation: {prcp}\"")
         forecast.append('```')
         if days > 0:
             return forecast
