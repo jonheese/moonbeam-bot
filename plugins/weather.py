@@ -1,5 +1,6 @@
 from . import plugin
 from datetime import datetime, timedelta
+from uszipcode import SearchEngine
 
 import json
 import math
@@ -50,7 +51,27 @@ class WeatherPlugin(plugin.NoBotPlugin):
         for token in command:
             if re.search('\d{5}', token) and "." not in token:
                 return token
+        city_state = re.search('(\w+, \w+)', " ".join(command))
+        if city_state:
+            [city, state] = city_state.groups(0)[0].split(', ')
+            zipcode = self.search_for_city(city, state)
+            if zipcode:
+                return zipcode
+        else:
+            for token in command:
+                if token.lower() not in ['moonbeam', 'weather', 'days']:
+                    zipcode = self.search_for_city(token, None)
+                    if zipcode:
+                        return zipcode
         return '18104'
+
+
+    def search_for_city(self, city, state):
+        search = SearchEngine(simple_zipcode=True)
+        results = search.by_city_and_state(city, state)
+        if results:
+            return results[0].zipcode
+        return None
 
 
     def get_days(self, command):
