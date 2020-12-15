@@ -1,5 +1,6 @@
 from . import plugin
 from random import randint, seed
+import moonbeam_utils
 import os
 import json
 
@@ -67,7 +68,7 @@ class MoonbeamPlugin(plugin.NoBotPlugin):
                     {
                         'channel': self._config.get("MASTER_CHANNEL_ID"),
                         'text': self.__get_moonbeam_words(moonbeam_name),
-                        'as_user': False
+                        'as_user': False,
                     }
                 )
         # Check for moonbeam words
@@ -79,12 +80,13 @@ class MoonbeamPlugin(plugin.NoBotPlugin):
                 for message_word in message_words:
                     # Strip off all non-alpha chars (eg. punctuation)
                     message_word = "".join([i for i in str(message_word) if i.isalpha()])
-                    if word == message_word:
+                    if word == message_word.lower():
                         self._log.debug(json.dumps(request, indent=2))
+                        emojified_word = moonbeam_utils.emojify(word)
                         responses.append(
                             {
                                 'channel': request['channel'],
-                                'text': f"{moonbeam['name']} because: *{word}*\n{moonbeam.get('image_url')}",
+                                'text': f"{moonbeam['name']} because: *{emojified_word}*\n{moonbeam.get('image_url')}",
                             }
                         )
                         self.__reset_moonbeam(moonbeam['name'])

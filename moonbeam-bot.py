@@ -2,9 +2,11 @@
 
 from slack import RTMClient, WebClient
 from slack.errors import SlackApiError
+from time import time
 
 import json
 import logging
+import moonbeam_utils
 import os
 from importlib import import_module
 
@@ -39,9 +41,12 @@ class Moonbeam:
         self.__log.info(f"Posting message in channel {channel} (as_user={as_user}):")
         try:
             if 'text' in response.keys():
+                text = response.get('text')
+                if response.get('emojify') or round(time()) % 50 == 0: # 1/30th of the time randomly
+                    text = moonbeam_utils.emojify(text)
                 slack_response = self.__web_client.chat_postMessage(
                     channel=channel,
-                    text=response.get('text'),
+                    text=text,
                     attachments=response.get('attachments'),
                     as_user=as_user,
                 )
