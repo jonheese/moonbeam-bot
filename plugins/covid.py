@@ -66,10 +66,10 @@ class COVIDPlugin(plugin.NoBotPlugin):
             us_recovery_rate = round(float(self.__covid_stats['us']['recovered'].replace(',','')) * 100 / float(self.__covid_stats['us']['cases'].replace(',','')), 2)
             us_case_rate = round(float(self.__covid_stats['us']['cases'].replace(',','')) * 100 / float(us_pop), 4)
             us_death_chance = round(us_death_rate * us_case_rate / 100, 4)
-            return f"The COVID-19 death rate is *{world_death_rate}%%* worldwide, and *{us_death_rate}%%* in the US.\n" + \
-                f"The COVID-19 recovery rate is *{world_recovery_rate}%%* worldwide, and *{us_recovery_rate}%%* in the US.\n" + \
-                f"The COVID-19 case rate is *{world_case_rate}%%* worldwide, and *{us_case_rate}%%* in the US.\n" + \
-                f"The COVID-19 chance of death is *{world_death_chance}%%* worldwide, and *{us_death_chance}%%* in the US."
+            return f"The COVID-19 death rate is *{world_death_rate}%* worldwide, and *{us_death_rate}%* in the US.\n" + \
+                f"The COVID-19 recovery rate is *{world_recovery_rate}%* worldwide, and *{us_recovery_rate}%* in the US.\n" + \
+                f"The COVID-19 case rate is *{world_case_rate}%* worldwide, and *{us_case_rate}%* in the US.\n" + \
+                f"The COVID-19 chance of death is *{world_death_chance}%* worldwide, and *{us_death_chance}%* in the US."
         else:
             percentage = round(float(self.__covid_stats['us'][stat].replace(',','')) * 100 / float(self.__covid_stats['world'][stat].replace(',','')), 2)
             return f"There are currently *{self.__covid_stats['world'][stat]}* COVID-19 {stat} worldwide, with *{self.__covid_stats['us'][stat]} ({percentage}%%)* of those {stat} in the US"
