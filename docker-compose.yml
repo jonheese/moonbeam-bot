@@ -18,6 +18,7 @@ services:
       - QuotablePlugin_QUOTES_FILE=${QuotablePlugin_QUOTES_FILE}
       - TriggerPlugin_TRIGGERS_FILE=${TriggerPlugin_TRIGGERS_FILE}
       - DicePlugin_PLEASANTRIES_FILE=${DicePlugin_PLEASANTRIES_FILE}
+      - GraciousPlugin_PLEASANTRIES_FILE=${GraciousPlugin_PLEASANTRIES_FILE}
       - DBStorePlugin_DB_HOST=${DBStorePlugin_DB_HOST}
       - DBStorePlugin_DB_NAME=${DBStorePlugin_DB_NAME}
       - DBStorePlugin_DB_USER=${DBStorePlugin_DB_USER}
