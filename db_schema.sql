@@ -65,7 +65,8 @@ CREATE TABLE `tbl_messages` (
   `channel_id` smallint(6) NOT NULL,
   `timestamp` int(11) NOT NULL,
   `text` text COLLATE utf8mb4_unicode_ci,
-  `client_msg_id` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `client_msg_id` varchar(40) DEFAULT NULL,
+  `archive_url` varchar(128) DEFAULT NULL,
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `team_id` (`team_id`,`user_id`,`channel_id`,`timestamp`,`text`(127)),
   KEY `idx_channel_name_timestamp` (`channel_id`,`timestamp`),
@@ -84,6 +85,7 @@ CREATE TABLE `tbl_teams` (
   `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
   `slack_team_id` varchar(16) NOT NULL,
   `team_name` varchar(16) NOT NULL,
+  `team_url` varchar(40) DEFAULT NULL,
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

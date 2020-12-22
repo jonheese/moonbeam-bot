@@ -85,7 +85,14 @@ class DBStorePlugin(plugin.Plugin):
             self.__cache["channels"][slack_channel_id] = channel_id
         else:
             channel_id = self.__cache["channels"][slack_channel_id]
-        message_id = self.__insert_message(team_id, channel_id, user_id, timestamp, client_msg_id, text)
+        team_url = self.__select(f"select team_url from tbl_teams where id = {team_id}")
+        if len(team_url) > 0 and len(team_url[0]) > 0 and team_url[0][0]:
+            team_url = team_url[0][0]
+            archive_ts = data["ts"].replace(".", "")
+            archive_url = "/".join([team_url, "archives", slack_channel_id, f"p{archive_ts}"])
+        else:
+            archive_url = None
+        message_id = self.__insert_message(team_id, channel_id, user_id, timestamp, client_msg_id, archive_url, text)
         self.__handle_files(files, message_id)
         if "user_profile" in data.keys():
             self.__handle_user_profile(data['user_profile'], user_id)
@@ -156,17 +163,17 @@ class DBStorePlugin(plugin.Plugin):
         return False
 
 
-    def __insert_message(self, team_id, channel_id, user_id, timestamp, client_msg_id, text):
+    def __insert_message(self, team_id, channel_id, user_id, timestamp, client_msg_id, archive_url, text):
         message_id = self.__get_message_id(timestamp, user_id)
         if message_id:
             return message_id
         if not self.__conn or not self.__conn.is_connected():
             self.__init_db()
         cursor = self.__conn.cursor()
-        query = "insert into tbl_messages (team_id, channel_id, user_id, timestamp, client_msg_id, text) values (%s, %s, %s, %s, %s, %s)"
+        query = "insert into tbl_messages (team_id, channel_id, user_id, timestamp, client_msg_id, archive_url, text) values (%s, %s, %s, %s, %s, %s, %s)"
         self._log.debug("Inserting message:")
-        self._log.debug(query % (team_id, channel_id, user_id, timestamp, client_msg_id, text))
-        cursor.execute(query, (team_id, channel_id, user_id, timestamp, client_msg_id, text))
+        self._log.debug(query % (team_id, channel_id, user_id, timestamp, client_msg_id, archive_url, text))
+        cursor.execute(query, (team_id, channel_id, user_id, timestamp, client_msg_id, archive_url, text))
         self.__conn.commit()
         cursor.close()
         message_id = self.__get_message_id(timestamp, user_id)
