@@ -42,7 +42,9 @@ class Moonbeam:
         try:
             if 'text' in response.keys():
                 text = response.get('text')
-                if response.get('emojify') or round(time()) % 50 == 0: # 1/30th of the time randomly
+                if response.get('emojify') or \
+                    ('emojify' not in response.keys() and \
+                        round(time()) % 50 == 0): # 1/30th of the time randomly
                     text = moonbeam_utils.emojify(text)
                 slack_response = self.__web_client.chat_postMessage(
                     channel=channel,

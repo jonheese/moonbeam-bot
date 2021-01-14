@@ -87,6 +87,7 @@ class MoonbeamPlugin(plugin.NoBotPlugin):
                             {
                                 'channel': request['channel'],
                                 'text': f"{moonbeam['name']} because: *{emojified_word}*\n{moonbeam.get('image_url')}",
+                                'emojify': False,
                             }
                         )
                         self.__reset_moonbeam(moonbeam['name'])
