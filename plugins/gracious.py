@@ -39,6 +39,18 @@ class GraciousPlugin(plugin.NoBotPlugin):
                             {
                                 'channel': request['channel'],
                                 'text': f"You're welcome, <@{request['user']}>! :grin:",
+                                'attachments': [
+                                    {
+                                      "type": "image",
+                                      "title": {
+                                        "type": "plain_text",
+                                        "text": "Thanks, Moonbeam"
+                                      },
+                                      "block_id": "image4",
+                                      "image_url": "https://slack-files.com/T0TGU21T2-F01LCND36SE-1478259442",
+                                      "alt_text": "Thanks, Moonbeam."
+                                    }
+                                ],
                             }
                         )
                         break

@@ -86,8 +86,20 @@ class MoonbeamPlugin(plugin.NoBotPlugin):
                         responses.append(
                             {
                                 'channel': request['channel'],
-                                'text': f"{moonbeam['name']} because: *{emojified_word}*\n{moonbeam.get('image_url')}",
+                                'text': f"{moonbeam['name']} because: {emojified_word}",
                                 'emojify': False,
+                                'attachments': [
+                                     {
+                                       "type": "image",
+                                       "title": {
+                                         "type": "plain_text",
+                                         "text": moonbeam['name']
+                                       },
+                                       "block_id": "image4",
+                                       "image_url": moonbeam.get('image_url'),
+                                       "alt_text": moonbeam['name'],
+                                     }
+                                 ],
                             }
                         )
                         self.__reset_moonbeam(moonbeam['name'])
