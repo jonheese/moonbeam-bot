@@ -23,23 +23,32 @@ class WeatherPlugin(plugin.NoBotPlugin):
         weather_info = data.get('weatherInfo').get(f'ZU{zipcode}')
         forecast.append(f"Forecast for {weather_info.get('name')}:")
         forecast.append('```')
+        forecast.append('Day        Date       High     Low     Rain   Snow')
         for day in weather_info.get('wxInfo'):
-            date = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('%A (%m/%d)')
-            max_temp = day.get('maxTemp')
-            min_temp = day.get('minTemp')
-            prcp = day.get('prcp')
-            snow = day.get('snow')
-            date_padding = (17 - len(date)) * " "
-            high_padding = (4 - len(max_temp)) * " "
-            low_padding = (4 - len(min_temp)) * " "
-            prcp_padding = (4 - len(prcp)) * " "
-            if snow:
-                forecast.append(f"{date}:{date_padding} High: {max_temp}°F, {high_padding}" +
-                                f"Low: {min_temp}°F,{low_padding} Precipitation: {prcp}\"" +
-                                f",{prcp_padding} Snow: {snow}\"")
+            dow = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('%A')
+            date = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('(%m/%d)')
+            max_temp = "{:-03.1f}".format(float(day.get('maxTemp')))
+            min_temp = "{:-03.1f}".format(float(day.get('minTemp')))
+            if day.get('prcp') == '0':
+                prcp = '---- '
             else:
-                forecast.append(f"{date}:{date_padding} High: {max_temp}°F, {high_padding}" +
-                                f"Low: {min_temp}°F,{low_padding} Precipitation: {prcp}\"")
+                prcp = '{:02.2f}"'.format(float(day.get('prcp')))
+            if day.get('snow') == '0':
+                snow = '---- '
+            else:
+                snow = '{:02.2f}"'.format(float(day.get('snow')))
+            dow_padding = (10 - len(dow)) * " "
+            high_padding = (5 - len(max_temp)) * " "
+            low_padding = (5 - len(min_temp)) * " "
+            prcp_padding = (4 - len(prcp)) * " "
+            snow_padding = (4 - len(snow)) * " "
+            if snow:
+                forecast.append(f"{dow}{dow_padding}{date}:  {high_padding}{max_temp}°F  "
+                                f"{low_padding}{min_temp}°F {prcp_padding}  {prcp}" +
+                                f"{snow_padding}  {snow}")
+            else:
+                forecast.append(f"{date}:  {high_padding}{max_temp}°F  "
+                                f"{low_padding} {min_temp}°F {prcp_padding}  {prcp}")
         forecast.append('```')
         if days > 0:
             return forecast
