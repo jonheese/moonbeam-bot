@@ -24,6 +24,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
         forecast.append(f"Forecast for {weather_info.get('name')}:")
         forecast.append('```')
         forecast.append('Day        Date       High     Low     Rain   Snow')
+        forecast.append('===================================================')
         for day in weather_info.get('wxInfo'):
             dow = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('%A')
             date = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('(%m/%d)')
