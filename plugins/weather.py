@@ -30,14 +30,16 @@ class WeatherPlugin(plugin.NoBotPlugin):
             date = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('(%m/%d)')
             max_temp = "{:-03.1f}".format(float(day.get('maxTemp')))
             min_temp = "{:-03.1f}".format(float(day.get('minTemp')))
-            if day.get('prcp') == '0':
+            prcp = day.get('prcp')
+            snow = day.get('snow')
+            if not prcp or float(prcp) == 0.0:
                 prcp = '---- '
             else:
-                prcp = '{:02.2f}"'.format(float(day.get('prcp')))
-            if day.get('snow') == '0':
+                prcp = '{:02.2f}"'.format(float(prcp))
+            if not snow or float(snow) == 0.0:
                 snow = '---- '
             else:
-                snow = '{:02.2f}"'.format(float(day.get('snow')))
+                snow = '{:02.2f}"'.format(float(snow))
             dow_padding = (10 - len(dow)) * " "
             high_padding = (5 - len(max_temp)) * " "
             low_padding = (5 - len(min_temp)) * " "
@@ -122,13 +124,19 @@ class WeatherPlugin(plugin.NoBotPlugin):
             self._log.debug(f"Got weather request: {request['text']}")
             command = request['text'].split()
             days = self.get_days(command)
-            zipcode = self.get_zipcode(command)
-            if int(days) < 0:
-                datecode = (datetime.now() + timedelta(days=days)).strftime('%Y%m%d000000')
-                days = days * -1
+            if days > 30:
+                forecast = [f"I'm sorry <@{request['user']}>, I can't make a forecast that long!"]
             else:
-                datecode = datetime.now().strftime('%Y%m%d000000')
-            forecast = self.get_forecast(days, datecode, zipcode)
+                zipcode = self.get_zipcode(command)
+                if int(days) < 0:
+                    datecode = (datetime.now() + timedelta(days=days)).strftime('%Y%m%d000000')
+                    days = days * -1
+                else:
+                    datecode = datetime.now().strftime('%Y%m%d000000')
+                try:
+                    forecast = self.get_forecast(days, datecode, zipcode)
+                except Exception as e:
+                    forecast = [f"I'm sorry, there was a problem getting the forecast you requested, <@{request['user']}>"]
             if len(forecast) > 0:
                 responses.append(
                     {
@@ -140,7 +148,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 responses.append(
                     {
                         'channel': request['channel'],
-                        'text': "Sorry, I wasn't able to get any data for that request :shrug:",
+                        'text': f"Sorry, <@{request['user']}> -- I wasn't able to get any data for that request :shrug:",
                     }
                 )
         return responses
