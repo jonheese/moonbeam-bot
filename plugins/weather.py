@@ -23,11 +23,10 @@ class WeatherPlugin(plugin.NoBotPlugin):
         weather_info = data.get('weatherInfo').get(f'ZU{zipcode}')
         forecast.append(f"Forecast for {weather_info.get('name')}:")
         forecast.append('```')
-        forecast.append('Day        Date       High     Low     Rain   Snow')
-        forecast.append('===================================================')
+        forecast.append('Day     High     Low     Rain   Snow')
+        forecast.append('=====================================')
         for day in weather_info.get('wxInfo'):
-            dow = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('%A')
-            date = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('(%m/%d)')
+            dow = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('%a')
             max_temp = "{:-03.1f}".format(float(day.get('maxTemp')))
             min_temp = "{:-03.1f}".format(float(day.get('minTemp')))
             prcp = day.get('prcp')
@@ -40,17 +39,16 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 snow = '---- '
             else:
                 snow = '{:02.2f}"'.format(float(snow))
-            dow_padding = (10 - len(dow)) * " "
             high_padding = (5 - len(max_temp)) * " "
             low_padding = (5 - len(min_temp)) * " "
             prcp_padding = (4 - len(prcp)) * " "
             snow_padding = (4 - len(snow)) * " "
             if snow:
-                forecast.append(f"{dow}{dow_padding}{date}:  {high_padding}{max_temp}°F  "
+                forecast.append(f"{dow}:  {high_padding}{max_temp}°F  "
                                 f"{low_padding}{min_temp}°F {prcp_padding}  {prcp}" +
                                 f"{snow_padding}  {snow}")
             else:
-                forecast.append(f"{date}:  {high_padding}{max_temp}°F  "
+                forecast.append(f"{dow}:  {high_padding}{max_temp}°F  "
                                 f"{low_padding} {min_temp}°F {prcp_padding}  {prcp}")
         forecast.append('```')
         if days > 0:
