@@ -12,7 +12,8 @@
             "plugins.moonbeam.MoonbeamPlugin",
             "plugins.quotable.QuotablePlugin",
             "plugins.trigger.TriggerPlugin",
-            "plugins.weather.WeatherPlugin"
+            "plugins.weather.WeatherPlugin",
+            "plugins.tmdb.TMDBPlugin"
         ],
         "BOT_ID": "MOONBEAM_BOT_ID",
         "BOT_TOKEN": "xoxb-MOONBEAM_BOT_TOKEN"
@@ -77,5 +78,9 @@
         "MAX_THRESHOLD_SECS": 40,
         "RESPONSE_THRESHOLD_SECS": 30,
         "COOLDOWN_SECS": 300
+    }
+    "TMDBPlugin": {
+      "TMDB_API_URL": "https://....",
+      "TMDB_API_KEY": "hunter2",
     }
 }
