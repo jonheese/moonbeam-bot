@@ -78,7 +78,7 @@
         "MAX_THRESHOLD_SECS": 40,
         "RESPONSE_THRESHOLD_SECS": 30,
         "COOLDOWN_SECS": 300
-    }
+    },
     "TMDBPlugin": {
       "TMDB_API_URL": "https://....",
       "TMDB_API_KEY": "hunter2",
