@@ -40,7 +40,7 @@ class Moonbeam:
         as_user = response.get('as_user')
         self.__log.info(f"Posting message in channel {channel} (as_user={as_user}):")
         try:
-            if 'text' in response.keys():
+            if 'text' in response.keys() or 'blocks' in response.keys():
                 text = response.get('text')
                 if response.get('emojify') or \
                     ('emojify' not in response.keys() and \
@@ -50,6 +50,7 @@ class Moonbeam:
                     channel=channel,
                     text=text,
                     attachments=response.get('attachments'),
+                    blocks=response.get('blocks'),
                     as_user=as_user,
                 )
             elif 'name' in response.keys():
@@ -71,11 +72,14 @@ class Moonbeam:
         for plugin in self.__plugins:
             try:
                 responses = plugin.receive(message)
-                if responses is False:
+                if not responses:
                     self.__log.debug(f"{plugin.__class__.__name__} refusing to process message")
                 else:
-                    for response in responses:
-                        self.__post_message(response)
+                    if isinstance(responses, list):
+                        for response in responses:
+                            self.__post_message(response)
+                    else:
+                        self.__post_message(responses)
             except Exception as e:
                 self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to message: {e}")
 
