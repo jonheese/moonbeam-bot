@@ -6,8 +6,8 @@ import requests
 
 
 class TMDBPlugin(plugin.Plugin):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, web_client, plugin_config):
+        super().__init__(web_client=web_client, plugin_config=plugin_config)
         self._TMDB_API_URL = self._config.get("TMDB_API_URL")
         self._TMDB_API_KEY = self._config.get("TMDB_API_KEY")
         self._TMDB_MAX_RESULTS = self._config.get("TMDB_MAX_RESULTS", 3)
@@ -20,7 +20,7 @@ class TMDBPlugin(plugin.Plugin):
             self._log.debug(f"Got movie request: {request['text']}")
             command = request['text'].split()
 
-            movie = ' '.join(command.split()[2:])
+            movie = ' '.join(command[2:])
 
             if not movie:
                 return {
@@ -54,7 +54,7 @@ class TMDBPlugin(plugin.Plugin):
 
             result_num = 0
 
-            if lookup['total_result'] == 0:
+            if lookup['total_results'] == 0:
                 return {
                     'channel': request['channel'],
                     'text': f"Sorry, couldn't find any results for {movie}."

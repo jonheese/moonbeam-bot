@@ -81,6 +81,6 @@
     },
     "TMDBPlugin": {
       "TMDB_API_URL": "https://....",
-      "TMDB_API_KEY": "hunter2",
+      "TMDB_API_KEY": "hunter2"
     }
 }
