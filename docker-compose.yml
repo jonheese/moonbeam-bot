@@ -30,5 +30,7 @@ services:
       - ImpatientPlugin_MAX_THRESHOLD_SECS=${ImpatientPlugin_MAX_THRESHOLD_SECS}
       - ImpatientPlugin_RESPONSE_THRESHOLD_SECS=${ImpatientPlugin_RESPONSE_THRESHOLD_SECS}
       - ImpatientPlugin_COOLDOWN_SECS=${ImpatientPlugin_COOLDOWN_SECS}
+      - TMDBPlugin_TMDB_API_URL=${TMDBPlugin_TMDB_API_URL}
+      - TMDBPlugin_TMDB_API_KEY=${TMDBPlugin_TMDB_API_KEY}
     network_mode: "bridge"
     restart: always
