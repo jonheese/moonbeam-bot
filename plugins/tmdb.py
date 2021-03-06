@@ -6,17 +6,11 @@ import requests
 
 
 class TMDBPlugin(plugin.Plugin):
-    def __init__(self, web_client, plugin_config):
-        super().__init__(web_client=web_client, plugin_config=plugin_config)
-        self._TMDB_API_URL = self._config.get("TMDB_API_URL")
-        self._TMDB_API_KEY = self._config.get("TMDB_API_KEY")
-        self._TMDB_MAX_RESULTS = self._config.get("TMDB_MAX_RESULTS", 3)
-
     def receive(self, request):
         if super().receive(request) is False:
             return False
 
-        if request['text'].lower().startswith("moonbeam movies"):
+        if request['text'].lower().startswith("moonbeam movie"):
             self._log.debug(f"Got movie request: {request['text']}")
             command = request['text'].split()
 
@@ -31,16 +25,16 @@ class TMDBPlugin(plugin.Plugin):
 
             # Todo check for status -CC
             api_config = requests.get(
-                f'{self._TMDB_API_URL}/configuration',
+                f'{self._config.get("TMDB_API_URL")}/configuration',
                 params={
-                    'api_key': self._TMDB_API_KEY
+                    'api_key': self._config.get('TMDB_API_KEY')
                 }
             ).json()
 
             lookup = requests.get(
-                f'{self._TMDB_API_URL}/search/movie',
+                f'{self._config.get("TMDB_API_URL")}/search/movie',
                 params={
-                    'api_key': self._TMDB_API_KEY,
+                    'api_key': self._config.get('TMDB_API_KEY'),
                     'query': quote_plus(movie)
                 }
             ).json()
@@ -91,7 +85,7 @@ class TMDBPlugin(plugin.Plugin):
                 blocks.append({'type': 'divider'})
 
                 result_num += 1
-                if result_num == self._TMDB_MAX_RESULTS:
+                if result_num == self._config.get("TMDB_MAX_RESULTS", 3):
                     break
 
             blocks.append(OrderedDict({
