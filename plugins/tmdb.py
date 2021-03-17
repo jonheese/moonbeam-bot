@@ -67,7 +67,7 @@ class TMDBPlugin(plugin.Plugin):
                     result['poster_path'] if result['poster_path'] else ''
                 ])
 
-                release_year = result['release_date'].split('-')[0]
+                release_year = result.get('release_date', 'Unknown-').split('-')[0]
 
                 blocks.append({
                     'type': 'section',
