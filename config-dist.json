@@ -13,7 +13,8 @@
             "plugins.quotable.QuotablePlugin",
             "plugins.trigger.TriggerPlugin",
             "plugins.weather.WeatherPlugin",
-            "plugins.tmdb.TMDBPlugin"
+            "plugins.tmdb.TMDBPlugin",
+            "plugins.comics.ComicsPlugin"
         ],
         "BOT_ID": "MOONBEAM_BOT_ID",
         "BOT_TOKEN": "xoxb-MOONBEAM_BOT_TOKEN"
@@ -82,5 +83,10 @@
     "TMDBPlugin": {
       "TMDB_API_URL": "https://....",
       "TMDB_API_KEY": "hunter2"
+    },
+    "ComicsPlugin": {
+      "MARVEL_API_URL": "https://gateway.marvel.com/v1/public",
+      "MARVEL_API_PUBLIC_KEY": "abcd",
+      "MARVEL_API_PRIVATE_KEY": "1234"
     }
 }
