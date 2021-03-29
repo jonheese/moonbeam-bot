@@ -32,5 +32,8 @@ services:
       - ImpatientPlugin_COOLDOWN_SECS=${ImpatientPlugin_COOLDOWN_SECS}
       - TMDBPlugin_TMDB_API_URL=${TMDBPlugin_TMDB_API_URL}
       - TMDBPlugin_TMDB_API_KEY=${TMDBPlugin_TMDB_API_KEY}
+      - ComicsPlugin_MARVEL_API_URL=${ComicsPlugin_MARVEL_API_URL}
+      - ComicsPlugin_MARVEL_API_PUBLIC_KEY=${ComicsPlugin_MARVEL_API_PUBLIC_KEY}
+      - ComicsPlugin_MARVEL_API_PRIVATE_KEY=${ComicsPlugin_MARVEL_API_PRIVATE_KEY}
     network_mode: "bridge"
     restart: always
