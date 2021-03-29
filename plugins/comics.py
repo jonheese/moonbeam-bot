@@ -119,7 +119,7 @@ class ComicsPlugin(plugin.Plugin):
             date_end = now.ceil('week').format('YYYY-MM-DD')
 
             if re.search(r'new releases$', request['text'], re.IGNORECASE):
-                new_releases = comic_api.get_new_releases(
+                new_releases = comic_api.get_releases_by_date(
                     date_start,
                     date_end
                 )
