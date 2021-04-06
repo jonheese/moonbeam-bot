@@ -95,7 +95,7 @@ class DCComicsAPI(requests.Session):
         pass
 
 
-class ComicsPlugin(plugin.Plugin):
+class ComicsPlugin(plugin.NoBotPlugin):
     def receive(self, request):
 
         import re

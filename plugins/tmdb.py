@@ -5,7 +5,7 @@ from . import plugin
 import requests
 
 
-class TMDBPlugin(plugin.Plugin):
+class TMDBPlugin(plugin.NoBotPlugin):
     def receive(self, request):
         if super().receive(request) is False:
             return False
