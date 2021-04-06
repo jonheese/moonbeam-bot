@@ -6,31 +6,87 @@ import json
 import math
 import re
 import requests
+import traceback
 
 class WeatherPlugin(plugin.NoBotPlugin):
+    fields = {
+        'wt360': {
+            'date': 'utcDate',
+            'max_temp': 'maxTemp',
+            'min_temp': 'minTemp',
+            'snow': 'snow',
+            'prcp': 'precip',
+        },
+        'weatherbit' : {
+            'date': 'datetime',
+            'max_temp': 'high_temp',
+            'min_temp': 'low_temp',
+            'snow': 'snow',
+            'prcp': 'prcp',
+        }
+    }
+
+    def get_weather_data(self, days, datecode, zipcode):
+        if self.source == 'weatherbit':
+            api_key = self._config.get('WEATHERBIT_API_KEY')
+            url = 'https://api.weatherbit.io/v2.0/forecast/daily?' + \
+                  f'postal_code={zipcode}&days={days}&key={api_key}&units=I'
+        else:
+            api_key = self._config.get('WT360_API_KEY')
+            url = "http://api.wt360business.com/API/weather/daily/" + \
+                  f"%7BZU{zipcode}%7D?apiKey={api_key}&fmt=json&" + \
+                  f"func=getSummaryInfo&calendar=julian&cnt={days}&units=f&" + \
+                  f"sd={datecode}&avgTemp=1&prcp=1&maxTemp=1&minTemp=1&snow=1"
+        if not api_key:
+            self._log.debug(f"Didn't find an API key for source {self.source}")
+            return []
+        response = requests.get(url).json()
+        if self.source == 'weatherbit':
+            if 'data' not in response:
+                self._log.debug(
+                    "Didn't find  the key 'data' in the response: " +
+                    json.dumps(response, indent=2)
+                )
+                return []
+            return {
+                'name': response.get('city_name') + ", " + \
+                        response.get('state_code'),
+                'wxInfo': response['data'],
+            }
+        else:
+            if response.get("status") != "success":
+                return self.get_forecast(days, datecode, '92328')
+            return response.get('weatherInfo').get(f'ZU{zipcode}')
+
+
     def get_forecast(self, days, datecode, zipcode):
         forecast = []
-        api_key = self._config.get('WT360_API_KEY')
-        if not api_key:
+        weather_info = self.get_weather_data(days, datecode, zipcode)
+        if not weather_info:
             return forecast
-        url = f"http://api.wt360business.com/API/weather/daily/%7BZU{zipcode}%7D?" + \
-               f"apiKey={api_key}&fmt=json&func=getSummaryInfo&calendar=julian&" + \
-               f"cnt={days}&units=f&sd={datecode}&avgTemp=1&prcp=1&maxTemp=1&minTemp=1" + \
-               "&snow=1"
-        data = requests.get(url).json()
-        if data.get("status") != "success":
-            return self.get_forecast(days, datecode, '92328')
-        weather_info = data.get('weatherInfo').get(f'ZU{zipcode}')
         forecast.append(f"Forecast for {weather_info.get('name')}:")
         forecast.append('```')
         forecast.append('Day     High     Low     Rain   Snow')
         forecast.append('=====================================')
         for day in weather_info.get('wxInfo'):
-            dow = datetime.strptime(day.get('utcDate')[:10], '%Y-%m-%d').strftime('%a')
-            max_temp = "{:-03.1f}".format(float(day.get('maxTemp')))
-            min_temp = "{:-03.1f}".format(float(day.get('minTemp')))
-            prcp = day.get('prcp')
-            snow = day.get('snow')
+            dow = datetime.strptime(
+                day.get(
+                    self.fields.get(self.source).get('date')
+                )[:10],
+                '%Y-%m-%d'
+            ).strftime('%a')
+            max_temp = "{:-03.1f}".format(
+                float(day.get(
+                    self.fields.get(self.source).get('max_temp')
+                ))
+            )
+            min_temp = "{:-03.1f}".format(
+                float(day.get(
+                    self.fields.get(self.source).get('min_temp')
+                ))
+            )
+            prcp = day.get(self.fields.get(self.source).get('prcp'))
+            snow = day.get(self.fields.get(self.source).get('snow'))
             if not prcp or float(prcp) == 0.0:
                 prcp = '---- '
             else:
@@ -45,11 +101,11 @@ class WeatherPlugin(plugin.NoBotPlugin):
             snow_padding = (4 - len(snow)) * " "
             if snow:
                 forecast.append(f"{dow}:  {high_padding}{max_temp}°F  "
-                                f"{low_padding}{min_temp}°F {prcp_padding}  {prcp}" +
-                                f"{snow_padding}  {snow}")
+                    f"{low_padding}{min_temp}°F {prcp_padding}  {prcp}" +
+                    f"{snow_padding}  {snow}")
             else:
                 forecast.append(f"{dow}:  {high_padding}{max_temp}°F  "
-                                f"{low_padding} {min_temp}°F {prcp_padding}  {prcp}")
+                    f"{low_padding} {min_temp}°F {prcp_padding}  {prcp}")
         forecast.append('```')
         if days > 0:
             return forecast
@@ -82,6 +138,13 @@ class WeatherPlugin(plugin.NoBotPlugin):
     #    if results:
     #        return results[0].zipcode
     #    return None
+
+
+    def get_source(self, command):
+        for word in command:
+            if word.lower() == 'weatherbit' or word.lower() == 'wt360':
+                return word.lower()
+        return self._config.get('SOURCE', 'wt360')
 
 
     def get_days(self, command):
@@ -122,19 +185,29 @@ class WeatherPlugin(plugin.NoBotPlugin):
             self._log.debug(f"Got weather request: {request['text']}")
             command = request['text'].split()
             days = self.get_days(command)
+            self.source = self.get_source(command)
             if days > 30:
-                forecast = [f"I'm sorry <@{request['user']}>, I can't make a forecast that long!"]
+                forecast = [
+                    f"I'm sorry <@{request['user']}>, " +
+                    "I can't make a forecast that long!"
+                ]
             else:
                 zipcode = self.get_zipcode(command)
                 if int(days) < 0:
-                    datecode = (datetime.now() + timedelta(days=days)).strftime('%Y%m%d000000')
+                    datecode = (
+                        datetime.now() + timedelta(days=days)
+                    ).strftime('%Y%m%d000000')
                     days = days * -1
                 else:
                     datecode = datetime.now().strftime('%Y%m%d000000')
                 try:
                     forecast = self.get_forecast(days, datecode, zipcode)
                 except Exception as e:
-                    forecast = [f"I'm sorry, there was a problem getting the forecast you requested, <@{request['user']}>"]
+                    self._log.error(traceback.format_exc())
+                    forecast = [
+                        "I'm sorry, there was a problem getting the " +
+                        f"forecast you requested, <@{request['user']}>"
+                    ]
             if len(forecast) > 0:
                 responses.append(
                     {
@@ -146,7 +219,8 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 responses.append(
                     {
                         'channel': request['channel'],
-                        'text': f"Sorry, <@{request['user']}> -- I wasn't able to get any data for that request :shrug:",
+                        'text': f"Sorry, <@{request['user']}> -- I wasn't " +
+                            "able to get any data for that request :shrug:",
                     }
                 )
         return responses

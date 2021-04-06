@@ -26,6 +26,8 @@ services:
       - AutoScooglePlugin_AUTOSCOOGLE_USERS=${AutoScooglePlugin_AUTOSCOOGLE_USERS}
       - AutoScooglePlugin_AUTOSCOOGLE_TRIGGERS=${AutoScooglePlugin_AUTOSCOOGLE_TRIGGERS}
       - WeatherPlugin_WT360_API_KEY=${WeatherPlugin_WT360_API_KEY}
+      - WeatherPlugin_WEATHERBIT_API_KEY=${WeatherPlugin_WEATHERBIT_API_KEY}
+      - WeatherPlugin_SOURCE=${WeatherPlugin_SOURCE}
       - ImpatientPlugin_RESPONSES=${ImpatientPlugin_RESPONSES}
       - ImpatientPlugin_MAX_THRESHOLD_SECS=${ImpatientPlugin_MAX_THRESHOLD_SECS}
       - ImpatientPlugin_RESPONSE_THRESHOLD_SECS=${ImpatientPlugin_RESPONSE_THRESHOLD_SECS}
