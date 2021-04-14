@@ -228,6 +228,14 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 return True
         return False
 
+
+    def is_notable_request(self, command):
+        for word in command:
+            if word.lower() == 'notable':
+                return True
+        return False
+
+
     def get_days(self, command):
         numbered = {
             "hours": 1/24,
@@ -282,7 +290,14 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 else:
                     datecode = datetime.now().strftime('%Y%m%d000000')
                 try:
-                    forecast = self.get_forecast(days, datecode, zipcode, table=self.is_table_request(command))
+                    table = False
+                    if self.is_table_request(command):
+                        table = True
+                    elif self.is_notable_request(command):
+                        table = False
+                    elif days > 7:
+                        table = True
+                    forecast = self.get_forecast(days, datecode, zipcode, table)
                 except Exception as e:
                     self._log.error(traceback.format_exc())
                     forecast = [
