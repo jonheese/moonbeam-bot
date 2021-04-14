@@ -15,14 +15,14 @@ class WeatherPlugin(plugin.NoBotPlugin):
             'max_temp': 'maxTemp',
             'min_temp': 'minTemp',
             'snow': 'snow',
-            'prcp': 'precip',
+            'prcp': 'prcp',
         },
         'weatherbit' : {
             'date': 'datetime',
             'max_temp': 'high_temp',
             'min_temp': 'low_temp',
             'snow': 'snow',
-            'prcp': 'prcp',
+            'prcp': 'precip',
         }
     }
 
