@@ -19,14 +19,12 @@ class MarvelComicsAPI(requests.Session):
         self.ts = 0
 
         self.hash = md5(
-            f'1{self.private_key}{self.public_key}'.encode()
+            f'{self.ts}{self.private_key}{self.public_key}'.encode()
         ).hexdigest()
 
         super().__init__()
 
     def request(self, method, endpoint, headers=None, params={}, data=None, json=None, check_response=False, **kwargs):
-
-        self.ts += 1
 
         url = f'{self.url}/{endpoint}'
 
@@ -54,20 +52,37 @@ class MarvelComicsAPI(requests.Session):
 
         return result
 
-    def get_releases_by_date(self, range_begin, range_end):
+    def comics_generator(self, range_begin, range_end):
+        offset = 0
+        complete = False
+        while not complete:
+            releases = self.get(
+                '/comics',
+                params={
+                    'dateRange': f'{range_begin},{range_end}',
+                    'orderBy': 'onsaleDate',
+                    'offset': offset
+                }
+            )
+
+            result = releases.json()
+            offset += result['data']['count']
+
+            if result['data']['count'] == 0:
+                complete = True
+
+            for issue in result['data']['results']:
+                yield issue
+
+    def get_releases_by_date(self, range_begin, range_end, variants=False):
 
         result = []
 
-        # Todo - check for truncated results
-        releases = self.get(
-            '/comics',
-            params={
-                'dateRange': f'{range_begin},{range_end}',
-                'orderBy': 'onsaleDate'
-            }
-        )
+        for comic in self.comics_generator(range_begin, range_end):
 
-        for comic in releases.json()['data']['results']:
+
+            if variants is False and 'Variant' in comic['title']:
+                continue
 
             onsale = next(x for x in comic['dates'] if x['type'] == 'onsaleDate')
             onsale = arrow.get(onsale['date']).format('dddd, MMMM DD, YYYY')
