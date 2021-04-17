@@ -101,7 +101,7 @@ class MarvelComicsAPI(requests.Session):
                 }
             )
 
-        return result
+        return sorted(result, key = lambda k: k['title'])
 
 
 class DCComicsAPI(requests.Session):
