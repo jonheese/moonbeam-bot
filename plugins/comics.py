@@ -103,11 +103,34 @@ class MarvelComicsAPI(requests.Session):
 
         return sorted(result, key = lambda k: k['title'])
 
+    def get_current_releases(self, variants=False):
+        now = arrow.now()
+        date_start = now.floor('week').format('YYYY-MM-DD')
+        date_end = now.ceil('week').format('YYYY-MM-DD')
+
+        return self.get_releases_by_date(
+            range_begin=date_start,
+            range_end=date_end,
+            variants=variants
+        )
 
 class DCComicsAPI(requests.Session):
     # TODO
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, url, access_token, **kwargs):
+        self.access_token = access_token
+        self.url = url
+
+        super().__init__()
+
+    def get_current_releases(self, variants=False):
+        results = self.get(
+            self.url,
+            headers={
+                'ACCESS-TOKEN': self.access_token
+            }
+        )
+
+        return results.json()
 
 
 class ComicsPlugin(plugin.NoBotPlugin):
@@ -121,23 +144,22 @@ class ComicsPlugin(plugin.NoBotPlugin):
         if request['text'].lower().startswith("moonbeam comics"):
             self._log.debug(f"Got comics request: {request['text']}")
 
-            # Pivot on DC/Marvel later
-            comic_api = MarvelComicsAPI(
-                self._config.get('MARVEL_API_URL'),
-                public_key=self._config.get('MARVEL_API_PUBLIC_KEY'),
-                private_key=self._config.get('MARVEL_API_PRIVATE_KEY')
-            )
+            params = request['text'].lower().split()
 
-            # Get week boundaries
-            now = arrow.now()
-            date_start = now.floor('week').format('YYYY-MM-DD')
-            date_end = now.ceil('week').format('YYYY-MM-DD')
+            if params[2] == "marevl":
+                comic_api = MarvelComicsAPI(
+                    self._config.get('MARVEL_API_URL'),
+                    public_key=self._config.get('MARVEL_API_PUBLIC_KEY'),
+                    private_key=self._config.get('MARVEL_API_PRIVATE_KEY')
+                )
+            if params[2] == "dc":
+                comic_api = DCComicsAPI(
+                    url = self.__config.get('DC_API_URL'),
+                    access_token = self._config.get('DC_API_ACCESS_TOKEN')
+                )
 
             if re.search(r'new releases$', request['text'], re.IGNORECASE):
-                new_releases = comic_api.get_releases_by_date(
-                    date_start,
-                    date_end
-                )
+                new_releases = comic_api.get_current_releases()
 
                 blocks = []
                 for release in new_releases:
