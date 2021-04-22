@@ -146,7 +146,7 @@ class ComicsPlugin(plugin.NoBotPlugin):
 
             params = request['text'].lower().split()
 
-            if params[2] == "marevl":
+            if params[2] == "marvel":
                 comic_api = MarvelComicsAPI(
                     self._config.get('MARVEL_API_URL'),
                     public_key=self._config.get('MARVEL_API_PUBLIC_KEY'),
@@ -154,7 +154,7 @@ class ComicsPlugin(plugin.NoBotPlugin):
                 )
             if params[2] == "dc":
                 comic_api = DCComicsAPI(
-                    url = self.__config.get('DC_API_URL'),
+                    url = self._config.get('DC_API_URL'),
                     access_token = self._config.get('DC_API_ACCESS_TOKEN')
                 )
 

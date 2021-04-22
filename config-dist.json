@@ -91,6 +91,6 @@
       "MARVEL_API_PUBLIC_KEY": "abcd",
       "MARVEL_API_PRIVATE_KEY": "1234",
       "DC_API_URL": "https://someurl/dc/releases",
-      "DC_API_ACCeSS_TOKEN": "abcd12234"
+      "DC_API_ACCESS_TOKEN": "abcd12234"
     }
 }
