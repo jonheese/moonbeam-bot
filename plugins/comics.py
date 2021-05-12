@@ -52,7 +52,7 @@ class MarvelComicsAPI(requests.Session):
 
         return result
 
-    def comics_generator(self, range_begin, range_end):
+    def comics_generator(self, range_begin, range_end, variants):
         offset = 0
         complete = False
         while not complete:
@@ -61,6 +61,7 @@ class MarvelComicsAPI(requests.Session):
                 params={
                     'dateRange': f'{range_begin},{range_end}',
                     'orderBy': 'onsaleDate',
+                    'noVariants': False if variants else True, # oh lord.
                     'offset': offset
                 }
             )
@@ -78,11 +79,7 @@ class MarvelComicsAPI(requests.Session):
 
         result = []
 
-        for comic in self.comics_generator(range_begin, range_end):
-
-
-            if variants is False and 'Variant' in comic['title']:
-                continue
+        for comic in self.comics_generator(range_begin, range_end, variants):
 
             onsale = next(x for x in comic['dates'] if x['type'] == 'onsaleDate')
             onsale = arrow.get(onsale['date']).format('dddd, MMMM DD, YYYY')
