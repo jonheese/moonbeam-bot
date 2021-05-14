@@ -46,8 +46,8 @@ AutoScooglePlugin_AUTOSCOOGLE_USERS=[ "USLACKUSER", "UANOTHERONE" ]
 # JSON text var containing the triggers that preced an AutoScoogle query
 AutoScooglePlugin_AUTOSCOOGLE_TRIGGERS=[ "what is ", "what are ", "wtf is ", "wtf are ", "what the fuck is ", "what the fuck are " ]
 
-# wt360 API key
-WeatherPlugin_WT360_API_KEY=API_KEY
+# Weatherbit API key
+WeatherPlugin_WEATHERBIT_API_KEY=API_KEY
 ```
 
 If you don't want to run any of the existing plugins, just exclude them from the `Moonbeam_PLUGINS` list.

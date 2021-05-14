@@ -66,9 +66,7 @@
         ]
     },
     "WeatherPlugin": {
-        "WT360_API_KEY": "API_KEY",
-        "WEATHERBIT_API_KEY": "API_KEY",
-        "SOURCE": "weatherbit"
+        "WEATHERBIT_API_KEY": "API_KEY"
     },
     "ImpatientPlugin": {
         "RESPONSES": [
