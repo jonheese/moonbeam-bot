@@ -1,6 +1,6 @@
 arrow==1.0.3
 mysql-connector-python==8.0.22
 profanity==1.1
+pyzipcode==3.0.1
 requests==2.24.0
 slackclient==2.9.3
-uszipcode==0.2.4

@@ -42,10 +42,19 @@ class WeatherPlugin(plugin.NoBotPlugin):
     def __get_forecast_table(self, forecast, weather_info):
         if not weather_info:
             return forecast
+        snow_found = False
+        for day in weather_info.get('wxInfo'):
+            if day.get('snow') and float(day.get('snow')) > 0.0:
+                snow_found = True
+                break
         block = []
         block.append('```')
-        block.append('Date       High    Low    Rain  Snow')
-        block.append('=====================================')
+        if snow_found:
+            block.append('Date       High    Low    Rain  Snow')
+            block.append('=====================================')
+        else:
+            block.append('Date       High    Low    Rain')
+            block.append('===============================')
         for day in weather_info.get('wxInfo'):
             date = datetime.strptime(
                 day.get('datetime')[:10],
@@ -55,26 +64,27 @@ class WeatherPlugin(plugin.NoBotPlugin):
             max_temp = "{:-03.1f}".format(float(day.get('high_temp')))
             min_temp = "{:-03.1f}".format(float(day.get('low_temp')))
             prcp = day.get('precip')
-            snow = day.get('snow')
             if not prcp or float(prcp) == 0.0:
                 prcp = '---- '
             else:
                 prcp = '{:02.2f}"'.format(float(prcp))
-            if not snow or float(snow) == 0.0:
-                snow = '---- '
-            else:
-                snow = '{:02.2f}"'.format(float(snow))
+            if snow_found:
+                snow = day.get('snow')
+                if not snow or float(snow) == 0.0:
+                    snow = '---- '
+                else:
+                    snow = '{:02.2f}"'.format(float(snow))
             high_padding = (5 - len(max_temp)) * " "
             low_padding = (5 - len(min_temp)) * " "
             prcp_padding = (4 - len(prcp)) * " "
-            snow_padding = (4 - len(snow)) * " "
-            if snow:
+            if snow_found:
+                snow_padding = (4 - len(snow)) * " "
                 block.append(f"{dow}: {high_padding}{max_temp}°F "
                     f"{low_padding}{min_temp}°F  {prcp_padding}{prcp} " +
                     f"{snow_padding}{snow}")
             else:
                 block.append(f"{dow}: {high_padding}{max_temp}°F "
-                    f"{low_padding}{min_temp}°F {prcp_padding}{prcp}")
+                    f"{low_padding}{min_temp}°F  {prcp_padding}{prcp}")
         block.append('```')
         forecast.append(
             {
