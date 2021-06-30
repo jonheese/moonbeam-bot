@@ -106,7 +106,11 @@ class QuotablePlugin(plugin.NoBotPlugin):
             spaces = max_length - len(person)
             count_percent = f'{count} ({percent:.2f}%)'
             count_spacing = 12 - len(count_percent)
-            text = text + f"{person}: {spaces*' '} {count_percent}{' ' * count_spacing} {'#' * count}\n"
+            text += f"{person}: {spaces*' '} {count_percent}{' ' * count_spacing} {'#' * count}\n"
+        spaces = max_length - 5
+        count_percent = f"{len(quotes)} (100%)"
+        count_spacing = 12 - len(count_percent)
+        text += f"Total: {spaces*' '} {count_percent}{' ' * count_spacing} {'#' * len(quotes)}\n"
         text = text + '```'
         return text
 
