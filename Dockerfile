@@ -11,6 +11,7 @@ RUN set -eux\
     && pip install -r /usr/src/app/requirements.txt \
     && rm -rf /root/.cache/pip
 COPY . /usr/src/app
+RUN rm -f /usr/src/app/quotes.json
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 CMD ["python3", "-u", "moonbeam-bot.py"]

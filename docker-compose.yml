@@ -5,6 +5,10 @@ services:
     container_name: moonbeam-bot
     build: .
     image: jonheese/moonbeam-bot:latest
+    volumes:
+      - type: bind
+        source: ./quotes.json
+        target: /usr/src/app/quotes.json
     environment:
       - Moonbeam_PLUGINS=${Moonbeam_PLUGINS}
       - Moonbeam_BOT_ID=${Moonbeam_BOT_ID}

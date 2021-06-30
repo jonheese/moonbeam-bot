@@ -42,7 +42,14 @@ class QuotablePlugin(plugin.NoBotPlugin):
         person = split_attribution[0]
         quote = split_quote[0]
         attribution = ", ".join(split_quote[1:])
-        return self.__build_message(f"The Quotable {person}\n&gt;{quote}\n - {attribution}", channel)
+        if '\n' in quote:
+            output = ''
+            for line in quote.split('\n'):
+                output += f"&gt;{line}\n"
+            quote = output
+        else:
+            quote = f"&gt;{quote}\n"
+        return self.__build_message(f"The Quotable {person}\n{quote} - {attribution}", channel)
 
 
     def __check_for_dupe(self, requested_quote, quotes):
