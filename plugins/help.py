@@ -11,11 +11,12 @@ class HelpPlugin(plugin.NoBotPlugin):
                 {
                     'channel': request['channel'],
                     'text': "I understand the following commands:\n" + \
-                            "`Moonbeam roll <dice>` - Roll dice, `<dice>` format is MdN where M is the number of dice and N is how many sides are on each die, also accepts modifiers like `+` and `-` (eg. 3d8+2)\n" + \
                             "`Moonbeam add-quote <quote> - <attribution>` - Add a quote to the Quotable database\n" + \
                             "`Moonbeam add-trigger <trigger> - <reply>` - Add a trigger/reply to my trigger database (NOTE: Multiple replies can be given for a single trigger with subsequent requests and replies will be chosen at random when triggered)\n" + \
                             "`Moonbeam archive <search-string>` - Return a link to search the Slack archive for the given search string\n" + \
                             "`Moonbeam movie(s) <search-string>` - Return The Movie Database (TMDB) results for the given search string\n" + \
+                            "`Moonbeam post <channel-name> <message>` - Command Moonbeam to post `<message>` in channel `<channel-name>`\n" + \
+                            "`Moonbeam roll <dice>` - Roll dice, `<dice>` format is MdN where M is the number of dice and N is how many sides are on each die, also accepts modifiers like `+` and `-` (eg. 3d8+2)\n" + \
                             "`Moonbeam weather [[N] <period-type>] [zipcode]` - Return Weatherbit weather forecast for the optional _N_ time periods of _period-type_ (default 5 days) and optional _zipcode_ (default 18104)\n" + \
                             "`covid-deaths` - Return the current COVID-19 death rates for the world and the US\n" + \
                             "`covid-cases` - Return the current COVID-19 case rates for the world and the US\n" + \
