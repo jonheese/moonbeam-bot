@@ -20,6 +20,7 @@
         "BOT_TOKEN": "xoxb-MOONBEAM_BOT_TOKEN"
     },
     "CommandPlugin": {
+        "OPEN_COMMAND": false,
         "MASTER_ID": "ADMIN_ID",
         "MASTER_CHANNEL_ID": "ADMIN_DM_CHANNEL_ID"
     },

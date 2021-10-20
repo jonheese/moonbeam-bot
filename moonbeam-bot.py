@@ -8,6 +8,7 @@ import json
 import logging
 import moonbeam_utils
 import os
+import traceback
 from importlib import import_module
 
 
@@ -35,7 +36,7 @@ class Moonbeam:
         self.__rtm_client.start()
 
 
-    def __post_message(self, response):
+    def __post_message(self, response, conditionals=None):
         channel = response.get('channel')
         as_user = response.get('as_user')
         self.__log.info(f"Posting message in channel {channel} (as_user={as_user}):")
@@ -43,9 +44,21 @@ class Moonbeam:
             if 'text' in response.keys() or 'blocks' in response.keys():
                 text = response.get('text')
                 if response.get('emojify') or \
-                    ('emojify' not in response.keys() and \
+                        ('emojify' not in response.keys() and \
                         round(time()) % 50 == 0): # 1/30th of the time randomly
                     text = moonbeam_utils.emojify(text)
+                mappings = response.get('mappings')
+                if mappings:
+                    if '@CHANNEL@' in text and '@CHANNEL@' in mappings.keys():
+                        channel_name = mappings.get('@CHANNEL@')
+                        channel_id = 'UNKNOWN'
+                        channels = self.__web_client.conversations_list()
+                        for ch in channels.get('channels'):
+                            if ch.get('name') == channel_name:
+                                channel_id = ch.get('id')
+                                break
+                        mappings['@CHANNEL@'] = channel_id
+                    text = self.__replace_vars(response.get('text'), mappings)
                 slack_response = self.__web_client.chat_postMessage(
                     channel=channel,
                     text=text,
@@ -53,6 +66,8 @@ class Moonbeam:
                     blocks=response.get('blocks'),
                     as_user=as_user,
                 )
+                if conditionals and conditionals.get(True):
+                    self.__post_message(conditionals.get(True))
             elif 'name' in response.keys():
                 slack_response = self.__web_client.reactions_add(
                     channel=channel,
@@ -62,7 +77,21 @@ class Moonbeam:
             else:
                 raise RuntimeError(f"Unable to process response: {json.dumps(response, indent=2)}")
         except SlackApiError as e:
-            self.__log.exception(f"Encountered a Slack API Error posting message: {e.response['error']}")
+            if conditionals and conditionals.get(False):
+                if not mappings:
+                    mappings = response.get('mappings', {})
+                mappings['@ERROR@'] = traceback.format_exc()
+                response = conditionals.get(False)
+                response['text'] = self.__replace_vars(response.get('text'), mappings)
+                self.__post_message(response)
+            else:
+                self.__log.exception(f"Encountered a Slack API Error posting message: {e.response['error']}")
+
+
+    def __replace_vars(self, message, mappings):
+        for key in mappings.keys():
+            message = message.replace(key, mappings[key])
+        return message
 
 
     def __process_message(self, **payload):
@@ -73,11 +102,16 @@ class Moonbeam:
             try:
                 responses = plugin.receive(message)
                 if not responses:
-                    self.__log.debug(f"{plugin.__class__.__name__} refusing to process message")
+                    self.__log.debug(f"{plugin.__class__.__name__} didn't need to do anything with that message")
                 else:
                     if isinstance(responses, list):
-                        for response in responses:
-                            self.__post_message(response)
+                        if len(responses) == 2 and isinstance(responses[1], dict):
+                                [responses, conditionals] = responses
+                                for response in responses:
+                                    self.__post_message(response, conditionals)
+                        else:
+                            for response in responses:
+                                self.__post_message(response)
                     else:
                         self.__post_message(responses)
             except Exception as e:
@@ -86,7 +120,7 @@ class Moonbeam:
 
     def __process_typing(self, **payload):
         data = payload['data']
-        self.__log.info(json.dumps(data, indent=2))
+        self.__log.debug(json.dumps(data, indent=2))
         for plugin in self.__plugins:
             try:
                 responses = plugin.typing(data)

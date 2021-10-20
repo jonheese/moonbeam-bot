@@ -7,9 +7,11 @@ class CommandPlugin(plugin.NoBotPlugin):
         if super().receive(request) is False:
             return False
         responses = []
+        conditionals = {}
         # Check for master command
-        if request.get('channel') == self._config.get("MASTER_CHANNEL_ID") and \
-                request.get('user') == self._config.get("MASTER_ID"):
+        if self._config.get('OPEN_COMMAND') is True or \
+                (request.get('channel') == self._config.get("MASTER_CHANNEL_ID") and \
+                request.get('user') == self._config.get("MASTER_ID")):
             command = request['text']
             self._log.info(f'Got command: {command}')
             if command.split()[1] == "post":
@@ -22,4 +24,17 @@ class CommandPlugin(plugin.NoBotPlugin):
                     }
                 )
                 self._log.info(json.dumps(responses[0], indent=2))
-        return responses
+                conditionals = {
+                    True: {
+                        'channel': request.get('channel'),
+                        'text': f"Okay, I've posted \"{message}\" for you in <#@CHANNEL@> :thumbsup:",
+                        'mappings': {
+                            '@CHANNEL@': room_name,
+                        }
+                    },
+                    False: {
+                        'channel': request.get('channel'),
+                        'text': "I'm sorry, I had trouble posting this message for you: ```@ERROR@```",
+                    },
+                }
+        return [responses, conditionals]
