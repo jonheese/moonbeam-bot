@@ -102,3 +102,6 @@ class COVIDPlugin(plugin.NoBotPlugin):
                 }
             )
         return responses
+
+    def get_trigger_words(self):
+        return [ "covid-deaths", "covid-cases", "covid-recovery", "covid-rates", "covid-stats" ]

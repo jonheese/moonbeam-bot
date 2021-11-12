@@ -137,3 +137,6 @@ class TriggerPlugin(plugin.NoBotPlugin):
         if not responses:
             responses = self.__get_trigger(text, channel)
         return responses
+
+    def get_trigger_words(self):
+        return [ "add-trigger" ]

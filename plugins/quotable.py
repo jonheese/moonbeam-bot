@@ -2,11 +2,11 @@ from . import plugin
 from random import randint, seed
 import json
 
+
 class QuotablePlugin(plugin.NoBotPlugin):
     def __read_quotes(self):
         with open(self._config.get('QUOTES_FILE'), 'r') as f:
             return json.load(f)
-
 
     def __add_quote(self, quote):
         quotes = self.__read_quotes()
@@ -19,20 +19,16 @@ class QuotablePlugin(plugin.NoBotPlugin):
                 json.dump(quotes, f, indent=2)
             return
 
-
     def __get_quote(self):
         seed()
         quotes = self.__read_quotes()
-        quote = quotes[randint(0, 1000) % len(quotes)]
-        return quote
-
+        return quotes[randint(0, 1000) % len(quotes)]
 
     def __build_message(self, text, channel):
         return {
             'channel': channel,
             'text': text,
         }
-
 
     def __get_quote_message(self, channel, quote=None):
         if not quote:
@@ -51,7 +47,6 @@ class QuotablePlugin(plugin.NoBotPlugin):
             quote = f"&gt;{quote}\n"
         return self.__build_message(f"The Quotable {person}\n{quote} - {attribution}", channel)
 
-
     def __check_for_dupe(self, requested_quote, quotes):
         word_count = len(requested_quote.split())
         for quote in quotes:
@@ -63,19 +58,16 @@ class QuotablePlugin(plugin.NoBotPlugin):
                 return quote
         return False
 
-
     def __show_usage(self, request):
         random_quote = self.__get_quote()
         text = f"<@{request['user']}>, to add a quote to my database, your message must follow the format: `Moonbeam add-quote <quote> - <attribution>`" + \
                f", eg. `Moonbeam add-quote {random_quote}`"
         return self.__build_message(text, request['channel'])
 
-
     def __add_success(self, request, quote, responses):
         responses.append(self.__build_message(f"Okay, <@{request['user']}>, I added the following Quotable to my database:", request['channel']))
         responses.append(self.__get_quote_message(request['channel'], quote))
         return responses
-
 
     def __get_stats(self):
         max_length = 0
@@ -114,7 +106,6 @@ class QuotablePlugin(plugin.NoBotPlugin):
         text = text + '```'
         return text
 
-
     def receive(self, request):
         if super().receive(request) is False:
             return False
@@ -124,7 +115,7 @@ class QuotablePlugin(plugin.NoBotPlugin):
         user = request['user']
         if "quotable" in request['text'].lower():
             if "stats" in request['text'].lower():
-                responses.append(self.__build_message(self.__get_stats(), request['channel']))
+                responses.append(self.__build_message(self.__get_stats(), channel))
             else:
                 quote = self.__get_quote_message(channel=channel)
                 self._log.info("printing quotable:")
@@ -173,3 +164,5 @@ class QuotablePlugin(plugin.NoBotPlugin):
                 responses.append(self.__build_message(f":thinking_face: Ummm... I don't think there's any quote to {text.lower().split()[0]}...", channel))
         return responses
 
+    def get_trigger_words(self):
+        return [ "add-quote", "quotable" ]

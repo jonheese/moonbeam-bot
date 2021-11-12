@@ -13,6 +13,7 @@ class GraciousPlugin(plugin.NoBotPlugin):
                 self.__pleasantries = json.load(f)
         else:
             raise RuntimeError(f"Unable to locate pleasantries file {pleasantries_file}")
+        self.__global_trigger_words = []
 
 
     def receive(self, request):
@@ -22,6 +23,9 @@ class GraciousPlugin(plugin.NoBotPlugin):
         request_text = request['text']
         rude = False
         if "moonbeam" in request_text.lower():
+            for trigger_word in self.__global_trigger_words:
+                if trigger_word in request_text.lower():
+                    return []
             for word in request_text.split():
                 if profanity.contains_profanity(word):
                     responses.append(
@@ -55,3 +59,9 @@ class GraciousPlugin(plugin.NoBotPlugin):
                         )
                         break
         return responses
+
+    def get_trigger_words(self):
+        return []
+
+    def store_global_trigger_words(self, words):
+        self.__global_trigger_words = words

@@ -16,12 +16,16 @@ class Plugin:
             self._config = {}
         self._web_client = web_client
 
-
     def receive(self, message):
         pass
 
-
     def typing(self, data):
+        pass
+
+    def get_trigger_words(self):
+        return []
+
+    def store_global_trigger_words(self, words):
         pass
 
 

@@ -29,12 +29,12 @@ class Moonbeam:
             ping_interval=30,
             auto_reconnect=True,
         )
+        self.__trigger_words = []
         self.__plugins = []
         self.__load_plugins()
         self.__rtm_client.run_on(event='message')(self.__process_message)
         self.__rtm_client.run_on(event='user_typing')(self.__process_typing)
         self.__rtm_client.start()
-
 
     def __post_message(self, response, conditionals=None):
         channel = response.get('channel')
@@ -87,12 +87,10 @@ class Moonbeam:
             else:
                 self.__log.exception(f"Encountered a Slack API Error posting message: {e.response['error']}")
 
-
     def __replace_vars(self, message, mappings):
         for key in mappings.keys():
             message = message.replace(key, mappings[key])
         return message
-
 
     def __process_message(self, **payload):
         message = payload['data']
@@ -105,7 +103,7 @@ class Moonbeam:
                     self.__log.debug(f"{plugin.__class__.__name__} didn't need to do anything with that message")
                 else:
                     if isinstance(responses, list):
-                        if len(responses) == 2 and isinstance(responses[1], dict):
+                        if len(responses) == 2 and isinstance(responses[1], dict) and isinstance(responses[1].get(True), dict):
                                 [responses, conditionals] = responses
                                 for response in responses:
                                     self.__post_message(response, conditionals)
@@ -116,7 +114,6 @@ class Moonbeam:
                         self.__post_message(responses)
             except Exception as e:
                 self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to message: {e}")
-
 
     def __process_typing(self, **payload):
         data = payload['data']
@@ -129,7 +126,6 @@ class Moonbeam:
                         self.__post_message(response)
             except Exception as e:
                 self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to typing: {e}")
-
 
     def __load_config(self, prefix):
         config = {}
@@ -150,7 +146,6 @@ class Moonbeam:
                 except json.decoder.JSONDecodeError:
                     config[subkey] = value
         return config
-
 
     def __load_plugins(self):
         active_plugins = self.__config.get('PLUGINS')
@@ -181,8 +176,11 @@ class Moonbeam:
             plugin_config['BOT_ID'] = self.__config['BOT_ID']
             self.__log.debug(f"Loading class {cls.__name__}")
             plugin = cls(web_client=self.__web_client, plugin_config=plugin_config)
+            self.__trigger_words.extend(plugin.get_trigger_words())
             self.__plugins.append(plugin)
             self.__log.debug(f"Plugin registered: {plugin}")
+        for plugin in self.__plugins:
+            plugin.store_global_trigger_words(self.__trigger_words)
 
 
 if __name__ == "__main__":

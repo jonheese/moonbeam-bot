@@ -38,3 +38,6 @@ class CommandPlugin(plugin.NoBotPlugin):
                     },
                 }
         return [responses, conditionals]
+
+    def get_trigger_words(self):
+        return [ "post" ]

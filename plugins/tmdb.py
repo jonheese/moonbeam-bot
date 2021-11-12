@@ -100,3 +100,6 @@ class TMDBPlugin(plugin.NoBotPlugin):
                 'channel': request['channel'],
                 'blocks': blocks
             }
+
+    def get_trigger_words(self):
+        return [ "movie", "movies" ]

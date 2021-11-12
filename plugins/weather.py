@@ -274,3 +274,6 @@ class WeatherPlugin(plugin.NoBotPlugin):
                     }
                 )
         return responses
+
+    def get_trigger_words(self):
+        return [ "weather" ]
