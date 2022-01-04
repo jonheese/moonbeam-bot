@@ -3,7 +3,7 @@ Moonbeam is an extensible Slack chat bot.
 
 # Running
 ## docker-compose
-The simplest (and recommended) method to run the Moonbeam is via docker-compose.  You'll need to set a bunch of environment variables first, so using an `.env` file is recommended.  It should have the following format:
+The simplest (and recommended) method to run the Moonbeam is via docker-compose.  There are two options to configure it: 1) create a `config.json` file using the provided `config-dist.json` template, or 2) set a bunch of environment variables using an `.env` file with the following format:
 
 ```
 # List of plugin class specs to load.  The example is the full list at this time:
@@ -57,14 +57,14 @@ Then run: `docker-compose up --build` to start it up.  Once it's working well, y
 ## Manually running
 If you don't want to run it via docker-compose, you can run it manually.  You'll need to either set the above env vars beforehand, or you can create `config.json` in the base directory, using `config-dist.json` (and the annotated block above) as a guide.
 
-Then run `python3 -u moonbeam-bot.py`.  This can be run as an initscript using the sample scripts found in `initscripts`, but this is left as an exercise for the reader.
+Then run `python3 -u moonbeam-bot.py`.  This can be run as an systemd service or initscript using the sample scripts found in `initscripts`, but this is left as an exercise for the reader.
 
 # Extending
 To extend Moonbeam functionality, you can write your own plugin and PR it here for inclusion in the official Moonbeam bot.
 
-Your plugin should extend the `Plugin` (or `NoBotsPlugin`) class, be stored in a new file in the `plugins` directory, implement the `receive()` method.  See `plugins/help_plugin.py` for an easy-to-consume example.
+Your plugin should extend the `Plugin` (or `NoBotsPlugin`, if bot messages should not be processed by your plugin) class, be stored in a new file in the `plugins` directory, implement the `receive()` method.  See `plugins/help_plugin.py` for an easy-to-consume example.
 
-After you write your plugin, you'll need to add it to `Moonbeam_PLUGINS` in the config file/vars, along with any needed config directives.
+To test your plugin, you'll need to add it to `Moonbeam_PLUGINS` in the config file/vars, along with any needed config directives.
 
 # Feedback
 If you're using Moonbeam somewhere, first of all, I'm very surprised.  Second, please let me know, especially if you have any feedback on it: github@jonheese.com.

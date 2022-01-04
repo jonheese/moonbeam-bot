@@ -9,37 +9,8 @@ services:
       - type: bind
         source: ./quotes.json
         target: /usr/src/app/quotes.json
-    environment:
-      - Moonbeam_PLUGINS=${Moonbeam_PLUGINS}
-      - Moonbeam_BOT_ID=${Moonbeam_BOT_ID}
-      - Moonbeam_BOT_TOKEN=${Moonbeam_BOT_TOKEN}
-      - CommandPlugin_MASTER_ID=${CommandPlugin_MASTER_ID}
-      - CommandPlugin_MASTER_CHANNEL_ID=${CommandPlugin_MASTER_CHANNEL_ID}
-      - MoonbeamPlugin_MASTER_ID=${MoonbeamPlugin_MASTER_ID}
-      - MoonbeamPlugin_MASTER_CHANNEL_ID=${MoonbeamPlugin_MASTER_CHANNEL_ID}
-      - MoonbeamPlugin_MOONBEAM_IMAGE_URLS=${MoonbeamPlugin_MOONBEAM_IMAGE_URLS}
-      - MoonbeamPlugin_WORDS_FILE=${MoonbeamPlugin_WORDS_FILE}
-      - QuotablePlugin_QUOTES_FILE=${QuotablePlugin_QUOTES_FILE}
-      - TriggerPlugin_TRIGGERS_FILE=${TriggerPlugin_TRIGGERS_FILE}
-      - DicePlugin_PLEASANTRIES_FILE=${DicePlugin_PLEASANTRIES_FILE}
-      - GraciousPlugin_PLEASANTRIES_FILE=${GraciousPlugin_PLEASANTRIES_FILE}
-      - DBStorePlugin_DB_HOST=${DBStorePlugin_DB_HOST}
-      - DBStorePlugin_DB_NAME=${DBStorePlugin_DB_NAME}
-      - DBStorePlugin_DB_USER=${DBStorePlugin_DB_USER}
-      - DBStorePlugin_DB_PASSWORD=${DBStorePlugin_DB_PASSWORD}
-      - AutoScooglePlugin_AUTOSCOOGLE_USERS=${AutoScooglePlugin_AUTOSCOOGLE_USERS}
-      - AutoScooglePlugin_AUTOSCOOGLE_TRIGGERS=${AutoScooglePlugin_AUTOSCOOGLE_TRIGGERS}
-      - WeatherPlugin_WEATHERBIT_API_KEY=${WeatherPlugin_WEATHERBIT_API_KEY}
-      - ImpatientPlugin_RESPONSES=${ImpatientPlugin_RESPONSES}
-      - ImpatientPlugin_MAX_THRESHOLD_SECS=${ImpatientPlugin_MAX_THRESHOLD_SECS}
-      - ImpatientPlugin_RESPONSE_THRESHOLD_SECS=${ImpatientPlugin_RESPONSE_THRESHOLD_SECS}
-      - ImpatientPlugin_COOLDOWN_SECS=${ImpatientPlugin_COOLDOWN_SECS}
-      - TMDBPlugin_TMDB_API_URL=${TMDBPlugin_TMDB_API_URL}
-      - TMDBPlugin_TMDB_API_KEY=${TMDBPlugin_TMDB_API_KEY}
-      - ComicsPlugin_MARVEL_API_URL=${ComicsPlugin_MARVEL_API_URL}
-      - ComicsPlugin_MARVEL_API_PUBLIC_KEY=${ComicsPlugin_MARVEL_API_PUBLIC_KEY}
-      - ComicsPlugin_MARVEL_API_PRIVATE_KEY=${ComicsPlugin_MARVEL_API_PRIVATE_KEY}
-      - ComicsPlugin_DC_API_URL=${ComicsPlugin_DC_API_URL}
-      - ComicsPlugin_DC_API_ACCESS_TOKEN=${ComicsPlugin_DC_API_ACCESS_TOKEN}
+      - type: bind
+        source: ./config.json
+        target: /usr/src/app/config.json
     network_mode: "bridge"
     restart: always
