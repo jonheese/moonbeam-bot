@@ -14,6 +14,16 @@ class QuotablePlugin(plugin.NoBotPlugin):
         if dupe_quote:
             return dupe_quote
         else:
+            [quote_text, attribution] = quote.split(' - ')
+            if quote_text.startswith('"') and quote_text.endswith('"'):
+                quote_text = quote_text.lstrip('"').rstrip('"')
+            elif quote_text.startswith('\u201c') and quote_text.endswith('\u201d'):
+                quote_text = quote_text.lstrip('\u201c').rstrip('\u201d')
+            if attribution.startswith('"') and attribution.endswith('"'):
+                attribution = attribution.lstrip('"').rstrip('"')
+            elif attribution.startswith('\u201c') and attribution.endswith('\u201d'):
+                attribution = attribution.lstrip('\u201c').rstrip('\u201d')
+            quote = " - ".join([quote_text, attribution])
             quotes.append(quote)
             with open(self._config.get('QUOTES_FILE'), 'w') as f:
                 json.dump(quotes, f, indent=2)
@@ -135,13 +145,13 @@ class QuotablePlugin(plugin.NoBotPlugin):
                     quote = " ".join(words[command_index+1:])
                     dupe_quote = self.__add_quote(quote)
                     if not dupe_quote:
-                        responses = self.__add_success(request, quote, responses)
+                        responses = self.__add_success(request, self.__read_quotes()[-1:][0], responses)
                     else:
                         responses.append(self.__build_message(f"Sorry, <@{user}>, but that quote looks very similar to this quote, which is already in my database:", channel))
                         responses.append(self.__get_quote_message(channel, dupe_quote))
                         responses.append(self.__build_message(f"If you are sure you still want to add it, send me a DM saying \"add quote\" and I'll take care of it for you. :thumbsup:\n" + \
                                          "Otherwise, you can send me a DM saying \"cancel quote\" and we'll forget this ever happened. :wink:", channel))
-                        if not self.hasattr(self, '__confirmations'):
+                        if not hasattr(self, '__confirmations'):
                             self.__confirmations = {}
                         self.__confirmations[user] = quote
                 except Exception as e:

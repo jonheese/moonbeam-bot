@@ -11,7 +11,7 @@ class HelpPlugin(plugin.NoBotPlugin):
                 {
                     'channel': request['channel'],
                     'text': "I understand the following commands:\n" + \
-                            "`Moonbeam add-quote <quote> - <attribution>` - Add a quote to the Quotable database\n" + \
+                            "`Moonbeam add-quote <quote> - <attribution>` - Add a quote to the Quotable database (there is no need to use double-quotes in your message)\n" + \
                             "`Moonbeam add-trigger <trigger> - <reply>` - Add a trigger/reply to my trigger database (NOTE: Multiple replies can be given for a single trigger with subsequent requests and replies will be chosen at random when triggered)\n" + \
                             "`Moonbeam archive <search-string>` - Return a link to search the Slack archive for the given search string\n" + \
                             "`Moonbeam movie(s) <search-string>` - Return The Movie Database (TMDB) results for the given search string\n" + \
