@@ -1,10 +1,16 @@
 from . import plugin
+from googleapiclient.discovery import build
 from urllib.parse import quote
 
 import json
 import requests
 
 class AutoScooglePlugin(plugin.NoBotPlugin):
+    def __google_search(self, search_term):
+        service = build("customsearch", "v1", developerKey=self._config.get('AUTOSCOOGLE_API_KEY'))
+        res = service.cse().list(q=search_term, cx=self._config.get('AUTOSCOOGLE_CSE_ID'), num=1).execute()
+        return res['items'][0]
+
     def receive(self, request):
         if super().receive(request) is False:
             return False
@@ -23,16 +29,15 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
                 self._log.debug(f"################## Subject is {subject}")
                 break
         if subject:
-            res = requests.get(f'https://www.google.com/search?q={quote(subject)}&btnI')
-            res.raise_for_status()
-            if res.url.startswith('https://www.google.com/url?q='):
-                url = "=".join(res.url.split('=')[1:])
-            else:
-                url = res.url
-            responses.append(
-                {
-                    'channel': request['channel'],
-                    'text': f"I Auto-Scoogled that for you:\n{url}",
-                }
+            result = self.__google_search(
+                search_term=subject,
             )
+            url = result.get('formattedUrl')
+            if url:
+                responses.append(
+                    {
+                        'channel': request['channel'],
+                        'text': f"I Auto-Scoogled that for you:\n{url}",
+                    }
+                )
         return responses

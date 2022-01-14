@@ -109,7 +109,8 @@ class Moonbeam:
                                     self.__post_message(response, conditionals)
                         else:
                             for response in responses:
-                                self.__post_message(response)
+                                if isinstance(response, dict) and response:
+                                    self.__post_message(response)
                     else:
                         self.__post_message(responses)
             except Exception as e:

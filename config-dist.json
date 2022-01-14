@@ -64,7 +64,9 @@
             "who are ",
             "who tf is ",
             "who tf are "
-        ]
+        ],
+        "AUTOSCOOGLE_API_KEY": "your-googleapis-api-key",
+        "AUTOSCOOGLE_CSE_ID": "your-googleapis-cse-site-id"
     },
     "WeatherPlugin": {
         "WEATHERBIT_API_KEY": "API_KEY"

@@ -14,7 +14,7 @@ class CommandPlugin(plugin.NoBotPlugin):
                 request.get('user') == self._config.get("MASTER_ID")):
             command = request['text']
             self._log.info(f'Got command: {command}')
-            if command.split()[1] == "post":
+            if len(command.split()) > 1 and command.split()[1] == "post":
                 room_name = command.split()[2]
                 message = " ".join(command.split()[3:])
                 responses.append(
