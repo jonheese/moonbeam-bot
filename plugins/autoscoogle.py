@@ -20,10 +20,12 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
         text = request.get('text', '').lower()
         for trigger in self._config['AUTOSCOOGLE_TRIGGERS']:
             if trigger in text.lower():
-                if trigger.startswith("who"):
-                    subject = " ".join(text.split(trigger)[1:])
+                if trigger.startswith("what"):
+                    subject = text
+                elif trigger.startswith("who"):
+                    subject = text.replace(trigger, "")
                 else:
-                    subject = trigger.join(text.split(trigger)[1:])
+                    subject = "what is " + text.replace(trigger, "")
                 if "?" in subject:
                     subject = subject.split("?")[0]
                 self._log.debug(f"################## Subject is {subject}")

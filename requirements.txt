@@ -1,4 +1,5 @@
 arrow==1.0.3
+google-api-python-client==2.35.0
 mysql-connector-python==8.0.22
 profanity==1.1
 pyzipcode==3.0.1
