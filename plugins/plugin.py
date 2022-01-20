@@ -16,6 +16,13 @@ class Plugin:
             self._config = {}
         self._web_client = web_client
 
+    def _get_real_name_by_user_id(self, user_id):
+        info = self._web_client.users_info(user=user_id)
+        real_name = None
+        if info.get('user'):
+            real_name = info.get('user').get('real_name')
+        return real_name
+
     def receive(self, message):
         pass
 

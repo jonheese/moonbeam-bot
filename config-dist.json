@@ -93,5 +93,9 @@
       "MARVEL_API_PRIVATE_KEY": "1234",
       "DC_API_URL": "https://someurl/dc/releases",
       "DC_API_ACCESS_TOKEN": "abcd12234"
+    },
+    "PerdHapleyPlugin": {
+        "PERDS_FILE": "perds.json",
+        "PERD_IMAGE_URL": "http://example.com/perd_hapley.jpg"
     }
 }

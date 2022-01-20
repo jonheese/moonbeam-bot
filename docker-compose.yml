@@ -12,5 +12,11 @@ services:
       - type: bind
         source: ./config.json
         target: /usr/src/app/config.json
+      - type: bind
+        source: ./words.json
+        target: /usr/src/app/words.json
+      - type: bind
+        source: ./perds.json
+        target: /usr/src/app/perds.json
     network_mode: "bridge"
     restart: always
