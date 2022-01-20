@@ -20,12 +20,15 @@ class PerdHapleyPlugin(plugin.NoBotPlugin):
         seed()
         # Roll d20 to see if we're Perding
         if randint(1, self.__random_size) == self.__random_size:
+            now = time.strftime('%I:%M %p').lower()
+            if now.startswith("0"):
+                now = now[1:]
             quote = self.__perds[randint(0, len(self.__perds)-1)].replace(
                 '@NAME@',
                 self._get_real_name_by_user_id(request.get('user'))
             ).replace(
                 '@TIME@',
-                time.strftime('%I:%M %p').lower()
+                now
             )
             responses.append(
                 {
