@@ -12,14 +12,24 @@ class PerdHapleyPlugin(plugin.NoBotPlugin):
             self.__perds = json.load(f)
         self.__perd_image_url = self._config['PERD_IMAGE_URL']
         self.__random_size = self._config.get('RANDOM_SIZE', 20)
+        self.__in_cooldown = False
+        self.__cooldown_timer = 0
 
     def receive(self, request):
         if super().receive(request) is False:
             return False
         responses = []
+        if self.__in_cooldown:
+            if self.__cooldown_timer < self.__random_size:
+                self.__cooldown_timer += 1
+                return responses
+            self.__cooldown_timer = 0
+            self.__in_cooldown = False
         seed()
         # Roll d20 to see if we're Perding
         if randint(1, self.__random_size) == self.__random_size:
+            self.__in_cooldown = True
+            self.__cooldown_timer = 0
             now = time.strftime('%I:%M %p').lower()
             if now.startswith("0"):
                 now = now[1:]

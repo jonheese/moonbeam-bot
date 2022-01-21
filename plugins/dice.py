@@ -15,6 +15,7 @@ class DicePlugin(plugin.NoBotPlugin):
                 self.__pleasantries = json.load(f)
         else:
             raise RuntimeError(f"Unable to locate pleasantries file {pleasantries_file}")
+        self.__battlepramik_url = "https://slack-files.com/T0TGU21T2-F02V1RDMP27-533bca8f88"
 
 
     def __roll_dice(self, number, sides):
@@ -126,7 +127,7 @@ class DicePlugin(plugin.NoBotPlugin):
             image_url = None
             if total <= int(max_roll * 0.3):
                 color = "danger"
-                image_url = "https://slack-files.com/T0TGU21T2-FMLC3CUFL-04242147ee"
+                image_url = self.__battlepramik_url
             elif total <= int(max_roll * 0.6):
                 color = "warning"
             else:
@@ -136,7 +137,7 @@ class DicePlugin(plugin.NoBotPlugin):
                 "color":color,
             }
             if image_url:
-                attachments['image_url'] = "https://slack-files.com/T0TGU21T2-FMLC3CUFL-04242147ee"
+                attachments['image_url'] = self.__battlepramik_url
             responses.append(
                 {
                     'channel': request['channel'],
