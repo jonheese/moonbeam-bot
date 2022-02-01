@@ -1,4 +1,4 @@
-def emojify(text):
+def emojify(text=''):
     emojified_text = ''
     for char in text:
         if char.lower() in 'abcdefghijklmnopqrstuvwxyz':

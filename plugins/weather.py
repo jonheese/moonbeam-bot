@@ -222,47 +222,52 @@ class WeatherPlugin(plugin.NoBotPlugin):
             self._log.debug(f"Got weather request: {request['text']}")
             command = request['text'].replace('<tel:', '').replace('>', '').split()
             days = self.__get_days(command)
-            if days > 30:
-                forecast = [
-                    f"I'm sorry <@{request['user']}>, " +
-                    "I can't make a forecast that long!"
-                ]
+            if days > 16:
+                responses.append(
+                    {
+                        'channel': request['channel'],
+                        'text': f"I'm sorry <@{request['user']}>, " +
+                            "16 days is the longest forecast I can make!",
+                    }
+                )
+                days = 16
+            zipcode = self.__get_zipcode(command)
+            if int(days) < 0:
+                datecode = (
+                    datetime.now() + timedelta(days=days)
+                ).strftime('%Y%m%d000000')
+                days = days * -1
             else:
-                zipcode = self.__get_zipcode(command)
-                if int(days) < 0:
-                    datecode = (
-                        datetime.now() + timedelta(days=days)
-                    ).strftime('%Y%m%d000000')
-                    days = days * -1
-                else:
-                    datecode = datetime.now().strftime('%Y%m%d000000')
-                try:
+                datecode = datetime.now().strftime('%Y%m%d000000')
+            try:
+                table = False
+                if self.__is_table_request(command):
+                    table = True
+                elif self.__is_notable_request(command):
                     table = False
-                    if self.__is_table_request(command):
-                        table = True
-                    elif self.__is_notable_request(command):
-                        table = False
-                    elif days > 7:
-                        table = True
-                    forecast = self.__get_forecast(days, datecode, zipcode, table)
-                except Exception as e:
-                    self._log.error(traceback.format_exc())
-                    forecast = [
-                        "I'm sorry, there was a problem getting the " +
-                        f"forecast you requested, <@{request['user']}>"
-                    ]
+                elif days > 7:
+                    table = True
+                forecast = self.__get_forecast(days, datecode, zipcode, table)
+            except Exception as e:
+                self._log.error(traceback.format_exc())
+                forecast = [
+                    "I'm sorry, there was a problem getting the " +
+                    f"forecast you requested, <@{request['user']}>"
+                ]
             if len(forecast) > 0:
                 if isinstance(forecast[0], str):
                     responses.append(
                         {
                             'channel': request['channel'],
                             'text': "\n".join(forecast),
+                            'emojify': False,
                         }
                     )
                 else:
                     response = {
                         'channel': request['channel'],
                         'blocks': forecast,
+                        'emojify': False,
                     }
                     responses.append(response)
             else:

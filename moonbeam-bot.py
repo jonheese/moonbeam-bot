@@ -45,7 +45,7 @@ class Moonbeam:
                 text = response.get('text')
                 if response.get('emojify') or \
                         ('emojify' not in response.keys() and \
-                        round(time()) % 50 == 0): # 1/30th of the time randomly
+                        round(time()) % 50 == 0): # 1/50th of the time randomly
                     text = moonbeam_utils.emojify(text)
                 mappings = response.get('mappings')
                 if mappings:
