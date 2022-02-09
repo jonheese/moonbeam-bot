@@ -34,33 +34,33 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
             result = self.__google_search(
                 search_term=subject,
             )
+            self._log.debug(json.dumps(result, indent=2))
             url = result.get('link', result.get('formattedUrl'))
-            blocks = [
+            attachments = [
                 {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"I Auto-Scoogled that for you:\n{url}",
-                    }
+                    "mrkdwn_in": ["text"],
+                    "text": url,
                 }
             ]
             if "pagemap" in result.keys():
+                pagemap = result["pagemap"]
                 image_url = None
-                if "cse_thumbnail" in result["pagemap"].keys() and "src" in result["pagemap"]["cse_thumbnail"][0].keys():
-                    image_url = result["pagemap"]["cse_thumbnail"][0]["src"]
-                elif "cse_image" in result["pagemap"].keys() and "src" in result["pagemap"]["cse_image"][0].keys():
-                    image_url = result["pagemap"]["cse_image"][0]["src"]
+                if "cse_thumbnail" in pagemap.keys() and "src" in pagemap["cse_thumbnail"][0].keys():
+                    image_url = pagemap["cse_thumbnail"][0]["src"]
+                elif "cse_image" in pagemap.keys() and "src" in pagemap["cse_image"][0].keys():
+                    image_url = pagemap["cse_image"][0]["src"]
                 if image_url:
-                    blocks[0]["accessory"] = {
-                        "type": "image",
-                        "image_url": image_url,
-                        "alt_text": result.get("title"),
-                    }
+                    attachments[0]["image_url"] = image_url
+                if "metatags" in pagemap and "og:title" in pagemap["metatags"][0].keys():
+                    attachments[0]["title"] = pagemap["metatags"][0]["og:title"]
+                elif result.get("title"):
+                    attachments[0]["title"] = result["title"]
             if url:
                 responses.append(
                     {
                         'channel': request['channel'],
-                        'blocks': blocks,
+                        'text': 'I Auto-Scoogled that for you:',
+                        'attachments': attachments,
                     }
                 )
         return responses
