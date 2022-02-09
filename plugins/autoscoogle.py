@@ -34,12 +34,33 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
             result = self.__google_search(
                 search_term=subject,
             )
-            url = result.get('formattedUrl')
+            url = result.get('link', result.get('formattedUrl'))
+            blocks = [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"I Auto-Scoogled that for you:\n{url}",
+                    }
+                }
+            ]
+            if "pagemap" in result.keys():
+                image_url = None
+                if "cse_thumbnail" in result["pagemap"].keys() and "src" in result["pagemap"]["cse_thumbnail"][0].keys():
+                    image_url = result["pagemap"]["cse_thumbnail"][0]["src"]
+                elif "cse_image" in result["pagemap"].keys() and "src" in result["pagemap"]["cse_image"][0].keys():
+                    image_url = result["pagemap"]["cse_image"][0]["src"]
+                if image_url:
+                    blocks[0]["accessory"] = {
+                        "type": "image",
+                        "image_url": image_url,
+                        "alt_text": result.get("title"),
+                    }
             if url:
                 responses.append(
                     {
                         'channel': request['channel'],
-                        'text': f"I Auto-Scoogled that for you:\n{url}",
+                        'blocks': blocks,
                     }
                 )
         return responses
