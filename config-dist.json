@@ -97,5 +97,11 @@
     "PerdHapleyPlugin": {
         "PERDS_FILE": "perds.json",
         "PERD_IMAGE_URL": "http://example.com/perd_hapley.jpg"
+    },
+    "TheWeekendPlugin": {
+        "GIPHY_API_URL": "http://api.giphy.com/v1/gifs/search",
+        "GIPHY_API_QUERY": "the weekend",
+        "GIPHY_API_KEY": "",
+        "GIPHY_API_LIMIT": 20
     }
 }
