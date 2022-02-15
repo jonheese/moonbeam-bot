@@ -13,7 +13,7 @@ class CommandPlugin(plugin.NoBotPlugin):
                 (request.get('channel') == self._config.get("MASTER_CHANNEL_ID") and \
                 request.get('user') == self._config.get("MASTER_ID")):
             command = request['text']
-            self._log.info(f'Got command: {command}')
+            self._log.info(f'Got potential command: {command}')
             if len(command.split()) > 1 and command.split()[1] == "post":
                 room_name = command.split()[2]
                 message = " ".join(command.split()[3:])

@@ -99,20 +99,19 @@ class Moonbeam:
         for plugin in self.__plugins:
             try:
                 responses = plugin.receive(message)
-                if not responses:
-                    self.__log.debug(f"{plugin.__class__.__name__} didn't need to do anything with that message")
-                else:
-                    if isinstance(responses, list):
-                        if len(responses) == 2 and isinstance(responses[1], dict) and isinstance(responses[1].get(True), dict):
-                                [responses, conditionals] = responses
-                                for response in responses:
-                                    self.__post_message(response, conditionals)
-                        else:
+                if isinstance(responses, dict):
+                    self.__post_message(responses)
+                elif isinstance(responses, list):
+                    if len(responses) == 2 and isinstance(responses[1], dict) and isinstance(responses[1].get(True), dict):
+                            [responses, conditionals] = responses
                             for response in responses:
-                                if isinstance(response, dict) and response:
-                                    self.__post_message(response)
+                                self.__post_message(response, conditionals)
                     else:
-                        self.__post_message(responses)
+                        for response in responses:
+                            if isinstance(response, dict) and response:
+                                self.__post_message(response)
+                else:
+                    self.__log.debug(f"{plugin.__class__.__name__} didn't need to do anything with that message")
             except Exception as e:
                 self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to message: {e}")
 
@@ -137,7 +136,7 @@ class Moonbeam:
                 with open(os.path.join(os.path.dirname(__file__), 'config.json'), 'r') as f:
                     config = json.load(f)
             except Exception as e:
-                self.__log.warn(e)
+                self.__log.warning(e)
         # Env vars override config file settings, if present
         for key, value in os.environ.items():
             if key.startswith(f"{prefix}_"):
