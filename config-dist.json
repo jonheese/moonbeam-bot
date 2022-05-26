@@ -103,5 +103,9 @@
         "GIPHY_API_QUERY": "the weekend",
         "GIPHY_API_KEY": "",
         "GIPHY_API_LIMIT": 20
+    },
+    "SpeakerForTheDeadPlugin": {
+        "TMZ_RSS_URI": "https://www.tmz.com/rss.xml",
+        "TRIGGERS": ["dead", "died"]
     }
 }
