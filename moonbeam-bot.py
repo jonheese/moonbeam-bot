@@ -34,6 +34,8 @@ class Moonbeam:
         self.__load_plugins()
         self.__rtm_client.run_on(event='message')(self.__process_message)
         self.__rtm_client.run_on(event='user_typing')(self.__process_typing)
+        self.__rtm_client.run_on(event='reaction_added')(self.__process_reaction_added)
+        self.__rtm_client.run_on(event='reaction_removed')(self.__process_reaction_removed)
         self.__rtm_client.start()
 
     def __post_message(self, response, conditionals=None):
@@ -126,6 +128,30 @@ class Moonbeam:
                         self.__post_message(response)
             except Exception as e:
                 self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to typing: {e}")
+
+    def __process_reaction_added(self, **payload):
+        data = payload['data']
+        self.__log.debug(json.dumps(data, indent=2))
+        for plugin in self.__plugins:
+            try:
+                responses = plugin.reaction(data, added=True)
+                if responses:
+                    for response in responses:
+                        self.__post_message(response)
+            except Exception as e:
+                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to reaction added: {e}")
+
+    def __process_reaction_removed(self, **payload):
+        data = payload['data']
+        self.__log.debug(json.dumps(data, indent=2))
+        for plugin in self.__plugins:
+            try:
+                responses = plugin.reaction(data, added=False)
+                if responses:
+                    for response in responses:
+                        self.__post_message(response)
+            except Exception as e:
+                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to reaction removed: {e}")
 
     def __load_config(self, prefix):
         config = {}

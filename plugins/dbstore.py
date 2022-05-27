@@ -23,7 +23,7 @@ class DBStorePlugin(plugin.Plugin):
             self.__conn = None
 
 
-    def __store_message(self, data):
+    def __check_init_cache(self):
         if not self.__cache:
             self.__cache = {
                 "users": {},
@@ -31,6 +31,9 @@ class DBStorePlugin(plugin.Plugin):
                 "teams": {},
             }
 
+
+    def __store_message(self, data):
+        self.__check_init_cache()
         if data.get("subtype") == "message_changed":
             message = data.get("message")
             if message:
@@ -96,6 +99,100 @@ class DBStorePlugin(plugin.Plugin):
         self.__handle_files(files, message_id)
         if "user_profile" in data.keys():
             self.__handle_user_profile(data['user_profile'], user_id)
+
+
+    def __store_reaction(self, data, added=True):
+        self.__check_init_cache()
+        item = data.get("item")
+        reaction = data.get("reaction")
+        if reaction and item and item.get("type") == "message" and \
+                item.get("ts") and item.get("channel") and data.get("user") and data.get("item_user"):
+            slack_user_id = data.get("user")
+            item_slack_user_id = data.get("item_user")
+            self.__add_remove_reaction(
+                item=item,
+                slack_user_id=slack_user_id,
+                reaction=reaction,
+                item_slack_user_id=item_slack_user_id,
+                added=added,
+            )
+        return
+
+
+    def __get_user_id_by_slack_user_id(self, slack_user_id=None, team_id=None):
+        if not slack_user_id in self.__cache["users"].keys():
+            columns = ["slack_user_id", "team_id"]
+            values = [slack_user_id, team_id]
+            user_id = self.__insert("tbl_users", columns, values, "slack_user_id", slack_user_id)
+            self.__cache["users"][slack_user_id] = user_id
+        else:
+            user_id = self.__cache["users"][slack_user_id]
+        return user_id
+
+
+    def __add_remove_reaction(self, item=None, slack_user_id=None, reaction=None, item_slack_user_id=None, added=True):
+        self._log.debug(f"Adding/removing reaction {reaction} to/from item {item} for slack_user_id {slack_user_id} ")
+        timestamp = item["ts"].split(".")[0]
+        try:
+            slack_channel_id = item["channel"]
+        except KeyError:
+            return
+
+        # This is a hack because Slack did not see fit to include team_id in the event message :/
+        team_id = 1
+
+        user_id = self.__get_user_id_by_slack_user_id(slack_user_id, team_id)
+        item_user_id = self.__get_user_id_by_slack_user_id(item_slack_user_id, team_id)
+        slack_channel_id = item.get("channel")
+
+        channel_id = self.__cache["channels"].get(slack_channel_id)
+        if not channel_id:
+            channel_id = self.__insert("tbl_channels", ["slack_channel_id", "team_id"], [slack_channel_id, team_id], "slack_channel_id", slack_channel_id)
+            self.__cache["channels"][slack_channel_id] = channel_id
+
+        message_id = self.__select(f"select id from tbl_messages where team_id = {team_id} and user_id = {item_user_id} and channel_id = {channel_id} and timestamp = {timestamp}")[0][0]
+        emoji_id = self.__select(f"select id from tbl_emojis where team_id = {team_id} and emoji_trigger = '{reaction}'")[0][0]
+        self._log.debug(f"Got emoji_id {emoji_id}")
+        if emoji_id:
+            reaction_id = self.__insert_delete_reaction(message_id, user_id, emoji_id, added)
+
+
+    def __insert_delete_reaction(self, message_id, user_id, emoji_id, added=True):
+        reaction_id = self.__get_reaction_id(message_id, user_id, emoji_id)
+        if reaction_id and added:
+            return reaction_id
+        if not self.__conn or not self.__conn.is_connected():
+            self.__init_db()
+        cursor = self.__conn.cursor()
+        if added:
+            query = "insert into tbl_reactions(message_id, user_id, emoji_id) values (%s, %s, %s)"
+            self._log.debug("Inserting reaction:")
+        else:
+            query = "delete from tbl_reactions where message_id = %s and user_id = %s and emoji_id = %s"
+            self._log.debug("Deleting reaction:")
+        self._log.debug(query % (message_id, user_id, emoji_id))
+        cursor.execute(query % (message_id, user_id, emoji_id))
+        self.__conn.commit()
+        cursor.close()
+        if added:
+            reaction_id = self.__get_reaction_id(message_id, user_id, emoji_id)
+            self._log.debug(f"Got reaction ID : ({message_id})")
+        else:
+            reaction_id = False
+        return reaction_id
+
+
+    def __get_reaction_id(self, message_id, user_id, emoji_id):
+        if not self.__conn or not self.__conn.is_connected():
+            self.__init_db()
+        cursor = self.__conn.cursor()
+        query = "select id from tbl_reactions where message_id = %s and user_id = %s and emoji_id = %s"
+        cursor.execute(query, (message_id, user_id, emoji_id))
+        records = cursor.fetchall()
+        cursor.close()
+        if records:
+            return records[0][0]
+        return False
 
 
     def __select(self, query):
@@ -257,6 +354,16 @@ class DBStorePlugin(plugin.Plugin):
         cursor.execute(query, tuple(subs))
         self.__conn.commit()
         cursor.close()
+
+
+    def reaction(self, request, added=True):
+        try:
+            self.__store_reaction(request, added)
+        except mysql.connector.errors.IntegrityError as ie:
+            self._log.warning(f"Refusing to insert duplicate reaction: {ie}")
+        except Exception as e:
+            self._log.exception(e)
+        return []
 
 
     def receive(self, request):

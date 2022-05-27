@@ -29,6 +29,9 @@ class Plugin:
     def typing(self, data):
         pass
 
+    def reaction(self, data, added=True):
+        pass
+
     def get_trigger_words(self):
         return []
 

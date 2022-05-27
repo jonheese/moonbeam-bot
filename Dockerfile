@@ -1,4 +1,4 @@
-FROM python:3.8.1-alpine
+FROM python:alpine
 WORKDIR /usr/src/app
 RUN set -eux \
     && apk add --no-cache --virtual .build-deps build-base \
