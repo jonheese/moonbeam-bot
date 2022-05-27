@@ -15,21 +15,21 @@ class SpeakerForTheDeadPlugin(plugin.NoBotPlugin):
 
         self.last_checked = arrow.now()
 
-    @aiocron.crontab('00 * * * *')  # Hourly at the top of the hour
-    @asyncio.coroutine
-    def check_feed():
+        @aiocron.crontab('00 * * * *')  # Hourly at the top of the hour
+        @asyncio.coroutine
+        def check_feed():
 
-        news = feedparser.parse(self._config.get("TMZ_RSS_URI"))
+            news = feedparser.parse(self._config.get("TMZ_RSS_URI"))
 
-        for entry in news.entries:
-            if any([trigger in entry.title.lower() for trigger in self._config.get("TRIGGERS")]):
-                if arrow.get(entry.updated) > self.last_checked:
-                    yield from self.__post_message(
-                        "#random",
-                        f"{entry.title}\n{entry.link}"
-                    )
+            for entry in news.entries:
+                if any([trigger in entry.title.lower() for trigger in self._config.get("TRIGGERS")]):
+                    if arrow.get(entry.updated) > self.last_checked:
+                        yield from self.__post_message(
+                            "#random",
+                            f"*Speaker For The Dead:*\n{entry.title}\n{entry.link}"
+                        )
 
-        self.last_checked = arrow.now()
+            self.last_checked = arrow.now()
 
     @asyncio.coroutine
     def __post_message(self, channel, text):
