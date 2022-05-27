@@ -14,10 +14,37 @@ class WeatherPlugin(plugin.NoBotPlugin):
         self.__zcdb = ZipCodeDatabase()
 
 
-    def __get_weather_data(self, days, datecode, zipcode):
+    def __get_daily_weather_data(self, days, datecode, zipcode):
         api_key = self._config.get('WEATHERBIT_API_KEY')
         url = 'https://api.weatherbit.io/v2.0/forecast/daily?' + \
               f'postal_code={zipcode}&days={days}&key={api_key}&units=I'
+        if not api_key:
+            self._log.debug("Didn't find a weatherbit API key")
+            return []
+        try:
+            response = requests.get(url).json()
+        except simplejson.errors.JSONDecodeError:
+            self._log.error("Got invalid JSON from API:")
+            self._log.error(requests.get(url))
+            return []
+        if 'data' not in response:
+            self._log.debug(
+                "Didn't find  the key 'data' in the response: " +
+                json.dumps(response, indent=2)
+            )
+            return []
+        return {
+            'name': self.__get_citystate_by_zipcode(zipcode),
+            'wxInfo': response['data'],
+        }
+
+
+    def __get_hourly_weather_data(self, hours, datecode, zipcode):
+        # Weatherbit charges $40/month for access to the Hourly endpoint :(
+        return self.__get_daily_weather_data(hours / 24, datecode, zipcode)
+        api_key = self._config.get('WEATHERBIT_API_KEY')
+        url = 'https://api.weatherbit.io/v2.0/forecast/hourly?' + \
+              f'postal_code={zipcode}&hours={hours}&key={api_key}&units=I'
         if not api_key:
             self._log.debug("Didn't find a weatherbit API key")
             return []
@@ -103,7 +130,10 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
     def __get_forecast(self, days, datecode, zipcode, table=False):
         forecast = []
-        weather_info = self.__get_weather_data(days, datecode, zipcode)
+        if days > 1:
+            weather_info = self.__get_daily_weather_data(int(days), datecode, zipcode)
+        else:
+            weather_info = self.__get_hourly_weather_data(days * 24, datecode, zipcode)
         if not weather_info:
             return forecast
         forecast.append(
@@ -232,7 +262,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 )
                 days = 16
             zipcode = self.__get_zipcode(command)
-            if int(days) < 0:
+            if days < 0:
                 datecode = (
                     datetime.now() + timedelta(days=days)
                 ).strftime('%Y%m%d000000')

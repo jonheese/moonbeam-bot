@@ -64,7 +64,7 @@ class DBStorePlugin(plugin.Plugin):
         text = data["text"]
 
         # Handle Spoiler Alert Messages
-        if data["subtype"] == "bot_message" and text == "Spoiler Alert!":
+        if data.get("subtype") == "bot_message" and text == "Spoiler Alert!":
             for block in data.get("blocks"):
                 if block.get("type") == "actions":
                     spoiler_text = json.loads(block.get("elements")[0].get("value")).get("text")
