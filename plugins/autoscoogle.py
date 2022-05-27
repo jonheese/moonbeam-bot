@@ -15,7 +15,6 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
         if super().receive(request) is False:
             return False
         responses = []
-        user = request['user']
         subject = None
         text = request.get('text', '').lower()
         for trigger in self._config['AUTOSCOOGLE_TRIGGERS']:

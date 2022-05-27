@@ -79,7 +79,9 @@ class TriggerPlugin(plugin.NoBotPlugin):
         responses = []
         text = request['text']
         channel = request['channel']
-        user = request['user']
+        if "user" not in request.keys():
+            return responses
+        user = request.get('user')
         if text.lower().startswith('moonbeam') and "add-trigger" in request['text'].lower():
             command_index = -1
             index = -1

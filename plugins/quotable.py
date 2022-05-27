@@ -122,7 +122,9 @@ class QuotablePlugin(plugin.NoBotPlugin):
         responses = []
         text = request['text']
         channel = request['channel']
-        user = request['user']
+        if "user" not in request.keys():
+            return responses
+        user = request.get('user')
         if "quotable" in request['text'].lower():
             if "stats" in request['text'].lower():
                 responses.append(self.__build_message(self.__get_stats(), channel))

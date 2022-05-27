@@ -62,6 +62,15 @@ class DBStorePlugin(plugin.Plugin):
         client_msg_id = data.get('client_msg_id')
         slack_channel_id = data["channel"]
         text = data["text"]
+
+        # Handle Spoiler Alert Messages
+        if data["subtype"] == "bot_message" and text == "Spoiler Alert!":
+            for block in data.get("blocks"):
+                if block.get("type") == "actions":
+                    spoiler_text = json.loads(block.get("elements")[0].get("value")).get("text")
+                    if spoiler_text:
+                        text = text + ": " + spoiler_text
+
         files = []
         if "files" in data.keys():
             files = data['files']
