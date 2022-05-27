@@ -29,7 +29,7 @@ class TheWeekendPlugin(plugin.NoBotPlugin):
             choices = [ x['url'] for x in result.json()['data'] ]
 
             yield from self.__post_message(
-                "#test",
+                "#random",
                 f"Ladies and Gentlemen, the weekend\n{random.choice(choices)}"
             )
 
