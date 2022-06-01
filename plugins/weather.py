@@ -4,6 +4,7 @@ from pyzipcode import ZipCodeDatabase
 
 import json
 import math
+import pgeocode
 import re
 import requests
 import traceback
@@ -39,30 +40,47 @@ class WeatherPlugin(plugin.NoBotPlugin):
         }
 
 
+    def __get_latlon_from_zipcode(self, zipcode):
+        data = pgeocode.Nominatim('us').query_postal_code(zipcode)
+        return f"{data.get('latitude')},{data.get('longitude')}"
+
+
     def __get_hourly_weather_data(self, hours, datecode, zipcode):
-        # Weatherbit charges $40/month for access to the Hourly endpoint :(
-        return self.__get_daily_weather_data(hours / 24, datecode, zipcode)
-        api_key = self._config.get('WEATHERBIT_API_KEY')
-        url = 'https://api.weatherbit.io/v2.0/forecast/hourly?' + \
-              f'postal_code={zipcode}&hours={hours}&key={api_key}&units=I'
+        api_key = self._config.get('DARKSKY_API_KEY')
         if not api_key:
-            self._log.debug("Didn't find a weatherbit API key")
+            self._log.debug("Didn't find a DarkSky API key")
             return []
+        latlon = self.__get_latlon_from_zipcode(zipcode)
+        url = f'https://api.darksky.net/forecast/{api_key}/{latlon}'
         try:
             response = requests.get(url).json()
         except simplejson.errors.JSONDecodeError:
             self._log.error("Got invalid JSON from API:")
             self._log.error(requests.get(url))
             return []
-        if 'data' not in response:
+        if 'hourly' not in response:
             self._log.debug(
-                "Didn't find  the key 'data' in the response: " +
+                "Didn't find  the key 'hourly' in the response: " +
                 json.dumps(response, indent=2)
             )
             return []
+        hourly_data = response['hourly'].get('data')
+        wx_info = []
+        count = 0
+        for hour in hourly_data:
+            hour_info = {}
+            hour_info["temp"] = hour.get("temperature")
+            hour_info["app_temp"] = hour.get("apparentTemperature")
+            hour_info["precip_prob"] = hour.get("precipProbability")
+            hour_info["summary"] = hour.get("summary")
+            hour_info["ts"] = hour.get("time")
+            wx_info.append(hour_info)
+            count += 1
+            if count >= hours:
+                break
         return {
             'name': self.__get_citystate_by_zipcode(zipcode),
-            'wxInfo': response['data'],
+            'wxInfo': wx_info,
         }
 
 
@@ -74,44 +92,62 @@ class WeatherPlugin(plugin.NoBotPlugin):
             if day.get('snow') and float(day.get('snow')) > 0.0:
                 snow_found = True
                 break
+        hourly = weather_info.get('wxInfo')[0].get('precip_prob') is not None
         block = []
         block.append('```')
-        if snow_found:
+        if hourly:
+            block.append('Hour     Temp   Feels   Rain%  Summary')
+            block.append('==============================================')
+        elif snow_found:
             block.append('Date       High    Low    Rain  Snow')
             block.append('=====================================')
         else:
             block.append('Date       High    Low    Rain')
             block.append('===============================')
         for day in weather_info.get('wxInfo'):
-            date = datetime.strptime(
-                day.get('datetime')[:10],
-                '%Y-%m-%d'
-            )
-            dow = f"{date.strftime('%m/%d')} {date.strftime('%a')[0]}"
-            max_temp = "{:-03.1f}".format(float(day.get('high_temp')))
-            min_temp = "{:-03.1f}".format(float(day.get('low_temp')))
-            prcp = day.get('precip')
-            if not prcp or float(prcp) == 0.0:
-                prcp = '---- '
-            else:
-                prcp = '{:02.2f}"'.format(float(prcp))
-            if snow_found:
-                snow = day.get('snow')
-                if not snow or float(snow) == 0.0:
-                    snow = '---- '
+            if hourly:
+                hod = datetime.fromtimestamp(day.get('ts')).strftime('%H:00')
+                temp = "{:-03.1f}".format(float(day.get('temp')))
+                app_temp = "{:-03.1f}".format(float(day.get('app_temp')))
+                precip_prob = day.get('precip_prob')
+                if not precip_prob or float(precip_prob) == 0.0:
+                    precip_prob = '  ---'
                 else:
-                    snow = '{:02.2f}"'.format(float(snow))
-            high_padding = (5 - len(max_temp)) * " "
-            low_padding = (5 - len(min_temp)) * " "
-            prcp_padding = (4 - len(prcp)) * " "
-            if snow_found:
-                snow_padding = (4 - len(snow)) * " "
-                block.append(f"{dow}: {high_padding}{max_temp}°F "
-                    f"{low_padding}{min_temp}°F  {prcp_padding}{prcp} " +
-                    f"{snow_padding}{snow}")
+                    precip_prob = '{:4d}%'.format(int(float(precip_prob) * 100))
+                summary = day.get("summary")
+                block.append(f"{hod}:  {temp}°F " +
+                    f" {app_temp}°F  {precip_prob} " +
+                    f" {summary}")
             else:
-                block.append(f"{dow}: {high_padding}{max_temp}°F "
-                    f"{low_padding}{min_temp}°F  {prcp_padding}{prcp}")
+                date = datetime.strptime(
+                    day.get('datetime')[:10],
+                    '%Y-%m-%d'
+                )
+                dow = f"{date.strftime('%m/%d')} {date.strftime('%a')[0]}"
+                max_temp = "{:-03.1f}".format(float(day.get('high_temp')))
+                min_temp = "{:-03.1f}".format(float(day.get('low_temp')))
+                prcp = day.get('precip')
+                if not prcp or float(prcp) == 0.0:
+                    prcp = '---- '
+                else:
+                    prcp = '{:02.2f}"'.format(float(prcp))
+                if snow_found:
+                    snow = day.get('snow')
+                    if not snow or float(snow) == 0.0:
+                        snow = '---- '
+                    else:
+                        snow = '{:02.2f}"'.format(float(snow))
+                high_padding = (5 - len(max_temp)) * " "
+                low_padding = (5 - len(min_temp)) * " "
+                prcp_padding = (4 - len(prcp)) * " "
+                if snow_found:
+                    snow_padding = (4 - len(snow)) * " "
+                    block.append(f"{dow}: {high_padding}{max_temp}°F " +
+                        f"{low_padding}{min_temp}°F  {prcp_padding}{prcp} " +
+                        f"{snow_padding}{snow}")
+                else:
+                    block.append(f"{dow}: {high_padding}{max_temp}°F "
+                        f"{low_padding}{min_temp}°F  {prcp_padding}{prcp}")
         block.append('```')
         forecast.append(
             {
@@ -130,9 +166,11 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
     def __get_forecast(self, days, datecode, zipcode, table=False):
         forecast = []
+        hourly = False
         if days > 1:
             weather_info = self.__get_daily_weather_data(int(days), datecode, zipcode)
         else:
+            hourly = True
             weather_info = self.__get_hourly_weather_data(days * 24, datecode, zipcode)
         if not weather_info:
             return forecast
@@ -145,7 +183,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 }
             }
         )
-        if table:
+        if table or hourly:
             return self.__get_forecast_table(forecast, weather_info)
         for day in weather_info.get('wxInfo'):
             dow = datetime.strptime(
@@ -237,6 +275,8 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 except Exception:
                     number = 1
                 if token in numbered.keys():
+                    if token == "hours":
+                        return number * numbered[token]
                     return math.ceil(number * numbered[token])
                 else:
                     return math.ceil(number * numbered[token+"s"])
