@@ -7,6 +7,7 @@ import asyncio
 
 import arrow
 import feedparser
+import re
 
 class SpeakerForTheDeadPlugin(plugin.NoBotPlugin):
 
@@ -22,12 +23,14 @@ class SpeakerForTheDeadPlugin(plugin.NoBotPlugin):
             news = feedparser.parse(self._config.get("TMZ_RSS_URI"))
 
             for entry in news.entries:
-                if any([trigger in entry.title.lower() for trigger in self._config.get("TRIGGERS")]):
-                    if arrow.get(entry.updated) > self.last_checked:
+                for trigger in self._config.get("TRIGGERS"):
+                    if re.compile(r'\b({0})\b'.format(re.escape(trigger)), flags=re.IGNORECASE).search(entry.title) and \
+                            arrow.get(entry.updated) > self.last_checked:
                         yield from self.__post_message(
                             "#random",
                             f"*Speaker For The Dead:*\n{entry.title}\n{entry.link}"
                         )
+                        break
 
             self.last_checked = arrow.now()
 
@@ -36,8 +39,8 @@ class SpeakerForTheDeadPlugin(plugin.NoBotPlugin):
         self._log.info(f"posting message in channel {channel}:")
         try:
             slack_response = self._web_client.chat_postMessage(
-            channel=channel,
-            text=text,
+                channel=channel,
+                text=text,
             )
         except SlackApiError as e:
             self._log.exception(f"Encountered a Slack API Error posting message: {e.response['error']}")
