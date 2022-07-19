@@ -63,13 +63,27 @@ class DBStorePlugin(plugin.Plugin):
         slack_channel_id = data["channel"]
         text = data["text"]
 
-        # Handle Spoiler Alert Messages
-        if data.get("subtype") == "bot_message" and text == "Spoiler Alert!":
-            for block in data.get("blocks"):
-                if block.get("type") == "actions":
-                    spoiler_text = json.loads(block.get("elements")[0].get("value")).get("text")
-                    if spoiler_text:
-                        text = text + ": " + spoiler_text
+        if data.get("subtype") == "bot_message" or data.get("bot_id"):
+            self._log.debug("Got bot message")
+
+            # Handle Spoiler Alert Messages
+            if text == "Spoiler Alert!":
+                spoiler_text = ""
+                context = ""
+                for block in data.get("blocks"):
+                    if block.get("type") == "actions":
+                        spoiler_text = json.loads(block.get("elements")[0].get("value")).get("text")
+                    if block.get("type") == "section" and block.get("text").get("text") != "Spoiler Alert!":
+                        context = f" [{block.get('text').get('text')}]"
+                if spoiler_text:
+                    text = f"{text}{context}: {spoiler_text}"
+
+            # Handle giphy images
+            elif data.get("bot_profile") and data.get("bot_profile").get("name") == "giphy":
+                self._log.debug("Got giphy message")
+                for block in data.get("blocks"):
+                    if block.get("type") == "image":
+                        text = text + ": <" + block.get("image_url") + ">"
 
         files = []
         if "files" in data.keys():
