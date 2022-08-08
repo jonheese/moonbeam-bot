@@ -51,7 +51,7 @@ class GraciousPlugin(plugin.NoBotPlugin):
                                         "text": "Thanks, Moonbeam"
                                       },
                                       "block_id": "image4",
-                                      "image_url": "https://slack-files.com/T0TGU21T2-F01LCND36SE-1478259442",
+                                      "image_url": "http://istolethis.com/img/thanksray.gif",
                                       "alt_text": "Thanks, Moonbeam."
                                     }
                                 ],
