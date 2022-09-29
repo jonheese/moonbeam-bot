@@ -40,8 +40,12 @@ class DBStorePlugin(plugin.Plugin):
                 client_msg_id = message.get("client_msg_id")
                 text = message.get("text")
                 if client_msg_id and text:
+                    is_image = False
+                    if message.get('attachments') and message['attachments'][0].get("image_url"):
+                        is_image = True
                     self.__update_message(
                         client_msg_id=client_msg_id,
+                        is_image=is_image,
                         text=text,
                     )
             return
@@ -301,13 +305,13 @@ class DBStorePlugin(plugin.Plugin):
         return message_id
 
 
-    def __update_message(self, client_msg_id, text):
+    def __update_message(self, client_msg_id, is_image, text):
         if not self.__conn or not self.__conn.is_connected():
             self.__init_db()
         cursor = self.__conn.cursor()
-        query = "update tbl_messages set text = %s where client_msg_id = %s"
-        self._log.debug(query % (text, client_msg_id))
-        cursor.execute(query, (text, client_msg_id))
+        query = "update tbl_messages set text = %s, is_image = %s where client_msg_id = %s"
+        self._log.debug(query % (text, is_image, client_msg_id))
+        cursor.execute(query, (text, is_image, client_msg_id))
         self.__conn.commit()
         cursor.close()
 
