@@ -67,6 +67,7 @@ CREATE TABLE `tbl_messages` (
   `text` text COLLATE utf8mb4_unicode_ci,
   `client_msg_id` varchar(40) DEFAULT NULL,
   `archive_url` varchar(128) DEFAULT NULL,
+  `is_image` tinyint(1) NOT NULL DEFAULT '0',
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `team_id` (`team_id`,`user_id`,`channel_id`,`timestamp`,`text`(127)),
   KEY `idx_channel_name_timestamp` (`channel_id`,`timestamp`),
