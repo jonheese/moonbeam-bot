@@ -1,5 +1,6 @@
 aiocron==1.8
 arrow==1.0.3
+beautifulsoup4==4.11.1
 feedparser==6.0.10
 google-api-python-client==2.35.0
 markdownify==0.11.6

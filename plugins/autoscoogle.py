@@ -1,4 +1,5 @@
 from . import plugin
+from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
 from urllib.parse import quote
 
@@ -11,6 +12,16 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
         service = build("customsearch", "v1", developerKey=self._config.get('AUTOSCOOGLE_API_KEY'))
         res = service.cse().list(q=search_term, cx=self._config.get('AUTOSCOOGLE_CSE_ID'), num=1).execute()
         return res['items'][0]
+
+    def __get_page_description(self, url):
+        page = requests.get(url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+        og_desc = soup.find("meta", property="og:description")
+        if og_desc and og_desc.get("content"):
+            return og_desc["content"]
+        if twitter_desc and twitter_desc.get("content"):
+            return twitter_desc["content"]
+        return None
 
     def receive(self, request):
         if super().receive(request) is False:
@@ -36,6 +47,8 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
             )
             self._log.debug(json.dumps(result, indent=2))
             url = result.get('link', result.get('formattedUrl'))
+            if not url:
+                return []
             attachments = [
                 {
                     "mrkdwn_in": ["text"],
@@ -55,19 +68,24 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
                     attachments[0]["title"] = pagemap["metatags"][0]["og:title"]
                 elif result.get("title"):
                     attachments[0]["title"] = result["title"]
-            if "htmlSnippet" in result.keys() or "snippet" in result.keys():
+
+            snippet = self.__get_page_description(url)
+            if not snippet and ("htmlSnippet" in result.keys() or "snippet" in result.keys()):
+                snippet = moonbeam_utils.html_to_markdown(result.get("htmlSnippet", result.get("snippet")))
+
+            if snippet:
                 attachments.append(
                     {
                         "mrkdwn_in": ["text"],
-                        "text": moonbeam_utils.html_to_markdown(result.get("htmlSnippet", result.get('snippet'))),
+                        "text": snippet,
                     }
                 )
-            if url:
-                responses.append(
-                    {
-                        'channel': request['channel'],
-                        'text': 'I Auto-Scoogled that for you:',
-                        'attachments': attachments,
-                    }
-                )
+
+            responses.append(
+                {
+                    'channel': request['channel'],
+                    'text': 'I Auto-Scoogled that for you:',
+                    'attachments': attachments,
+                }
+            )
         return responses
