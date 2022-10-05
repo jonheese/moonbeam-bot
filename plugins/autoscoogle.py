@@ -3,6 +3,7 @@ from googleapiclient.discovery import build
 from urllib.parse import quote
 
 import json
+import moonbeam_utils
 import requests
 
 class AutoScooglePlugin(plugin.NoBotPlugin):
@@ -54,6 +55,13 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
                     attachments[0]["title"] = pagemap["metatags"][0]["og:title"]
                 elif result.get("title"):
                     attachments[0]["title"] = result["title"]
+            if "htmlSnippet" in result.keys() or "snippet" in result.keys():
+                attachments.append(
+                    {
+                        "mrkdwn_in": ["text"],
+                        "text": moonbeam_utils.html_to_markdown(result.get("htmlSnippet", result.get('snippet'))),
+                    }
+                )
             if url:
                 responses.append(
                     {

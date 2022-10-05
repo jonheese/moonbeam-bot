@@ -1,3 +1,18 @@
+from markdownify import MarkdownConverter
+
+
+class SingleAsteriskBoldConverter(MarkdownConverter):
+    """
+    Custom MarkdownConverter than only adds a single asterisk on each side for <b>/<strong>
+    """
+    def convert(self, html):
+        return super().convert(html).replace("**", "*")
+
+
+def html_to_markdown(text=''):
+    return SingleAsteriskBoldConverter().convert(text)
+
+
 def emojify(text=''):
     emojified_text = ''
     for char in text:
@@ -58,3 +73,4 @@ def emojify(text=''):
         else:
             emojified_text += char
     return emojified_text
+

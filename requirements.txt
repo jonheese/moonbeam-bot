@@ -2,6 +2,7 @@ aiocron==1.8
 arrow==1.0.3
 feedparser==6.0.10
 google-api-python-client==2.35.0
+markdownify==0.11.6
 mysql-connector-python==8.0.22
 pgeocode==0.3.0
 profanity==1.1
