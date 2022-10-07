@@ -17,6 +17,7 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
         page = requests.get(url)
         soup = BeautifulSoup(page.text, 'html.parser')
         og_desc = soup.find("meta", property="og:description")
+        twitter_desc = soup.find("meta", property="twitter:description")
         if og_desc and og_desc.get("content"):
             return og_desc["content"]
         if twitter_desc and twitter_desc.get("content"):
