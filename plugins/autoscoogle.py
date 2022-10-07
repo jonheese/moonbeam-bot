@@ -11,7 +11,10 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
     def __google_search(self, search_term):
         service = build("customsearch", "v1", developerKey=self._config.get('AUTOSCOOGLE_API_KEY'))
         res = service.cse().list(q=search_term, cx=self._config.get('AUTOSCOOGLE_CSE_ID'), num=1).execute()
-        return res['items'][0]
+        if 'items' in res.keys():
+            return res['items'][0]
+        self._log.debug(f"Google Search result: {json.dumps(res, indent=2)}")
+        return None
 
     def __get_page_description(self, url):
         page = requests.get(url)
@@ -47,6 +50,8 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
                 search_term=subject,
             )
             self._log.debug(json.dumps(result, indent=2))
+            if result is None:
+                return []
             url = result.get('link', result.get('formattedUrl'))
             if not url:
                 return []
