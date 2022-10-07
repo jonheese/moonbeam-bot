@@ -125,15 +125,14 @@ class QuotablePlugin(plugin.NoBotPlugin):
         if "user" not in request.keys():
             return responses
         user = request.get('user')
-        if "quotable" in request['text'].lower():
-            if "stats" in request['text'].lower():
-                responses.append(self.__build_message(self.__get_stats(), channel))
-            else:
-                quote = self.__get_quote_message(channel=channel)
-                self._log.info("printing quotable:")
-                self._log.info(quote['text'])
-                responses.append(quote)
-        if text.lower().startswith('moonbeam') and "add-quote" in request['text'].lower():
+        if request['text'].lower() == "quotable":
+            quote = self.__get_quote_message(channel=channel)
+            self._log.info("printing quotable:")
+            self._log.info(quote['text'])
+            responses.append(quote)
+        elif "quotable" in request['text'].lower() and "stats" in request['text'].lower():
+            responses.append(self.__build_message(self.__get_stats(), channel))
+        elif text.lower().startswith('moonbeam') and "add-quote" in request['text'].lower():
             command_index = -1
             index = -1
             words = text.split()
@@ -161,7 +160,7 @@ class QuotablePlugin(plugin.NoBotPlugin):
                     responses.append(self.__show_usage(request))
             else:
                 responses.append(self.__show_usage(request))
-        if text.lower() == "add quote" or text.lower() == "cancel quote":
+        elif text.lower() == "add quote" or text.lower() == "cancel quote":
             if not self.hasattr(self, '__confirmations'):
                 self.__confirmations = {}
             if user in self.__confirmations.keys():
