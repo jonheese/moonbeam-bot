@@ -120,19 +120,19 @@ class QuotablePlugin(plugin.NoBotPlugin):
         if super().receive(request) is False:
             return False
         responses = []
-        text = request['text']
         channel = request['channel']
         if "user" not in request.keys():
             return responses
         user = request.get('user')
-        if request['text'].lower() == "quotable":
+        text = request.get('text')
+        if text.lower().strip() == "quotable":
             quote = self.__get_quote_message(channel=channel)
             self._log.info("printing quotable:")
             self._log.info(quote['text'])
             responses.append(quote)
-        elif "quotable" in request['text'].lower() and "stats" in request['text'].lower():
+        elif "quotable" in text.lower() and "stats" in text.lower():
             responses.append(self.__build_message(self.__get_stats(), channel))
-        elif text.lower().startswith('moonbeam') and "add-quote" in request['text'].lower():
+        elif text.lower().startswith('moonbeam') and "add-quote" in text.lower():
             command_index = -1
             index = -1
             words = text.split()
