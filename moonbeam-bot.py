@@ -101,9 +101,9 @@ class Moonbeam:
         for plugin in self.__plugins:
             try:
                 responses = plugin.receive(message)
-                if isinstance(responses, dict):
+                if responses and isinstance(responses, dict):
                     self.__post_message(responses)
-                elif isinstance(responses, list):
+                elif responses and isinstance(responses, list):
                     if len(responses) == 2 and isinstance(responses[1], dict) and isinstance(responses[1].get(True), dict):
                             [responses, conditionals] = responses
                             for response in responses:

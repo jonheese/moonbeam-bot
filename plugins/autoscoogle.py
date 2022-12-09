@@ -33,6 +33,12 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
         responses = []
         subject = None
         text = request.get('text', '').lower()
+
+        if "<" in text or ">" in text or "@" in text:
+            for word in text.split():
+                if "<" in word or ">" in word or "@" in word:
+                    text = text.replace(word, "")
+
         for trigger in self._config['AUTOSCOOGLE_TRIGGERS']:
             if trigger in text.lower():
                 if trigger.startswith("what"):
