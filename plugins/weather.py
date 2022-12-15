@@ -246,10 +246,8 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
 
     def __is_notable_request(self, command):
-        for word in command:
-            if word.lower() == 'notable':
-                return True
-        return False
+        str_command = " ".join(command).lower()
+        return "notable" in str_command or "no table" in str_command
 
 
     def __get_days(self, command):
@@ -292,15 +290,16 @@ class WeatherPlugin(plugin.NoBotPlugin):
             self._log.debug(f"Got weather request: {request['text']}")
             command = request['text'].replace('<tel:', '').replace('>', '').split()
             days = self.__get_days(command)
-            if days > 16:
+            if days > 7:
                 responses.append(
                     {
                         'channel': request['channel'],
                         'text': f"I'm sorry <@{request['user']}>, " +
-                            "16 days is the longest forecast I can make!",
+                            "7 days is the longest forecast I can make!  I know "
+                            "it's fucking stupid, and I'm sorry :disappointed:",
                     }
                 )
-                days = 16
+                days = 7
             zipcode = self.__get_zipcode(command)
             if days < 0:
                 datecode = (
@@ -310,12 +309,10 @@ class WeatherPlugin(plugin.NoBotPlugin):
             else:
                 datecode = datetime.now().strftime('%Y%m%d000000')
             try:
-                table = False
-                if self.__is_table_request(command):
-                    table = True
-                elif self.__is_notable_request(command):
+                table = True
+                if self.__is_notable_request(command):
                     table = False
-                elif days > 7:
+                elif self.__is_table_request(command):
                     table = True
                 forecast = self.__get_forecast(days, datecode, zipcode, table)
             except Exception as e:
