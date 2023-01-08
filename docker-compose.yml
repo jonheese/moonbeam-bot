@@ -18,5 +18,6 @@ services:
       - type: bind
         source: ./perds.json
         target: /usr/src/app/perds.json
-    network_mode: "bridge"
+    ports:
+      - "127.0.0.1:5002:5002"
     restart: always

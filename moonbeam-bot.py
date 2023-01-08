@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 
-from slack import RTMClient, WebClient
+from flask import Flask, request
+from slack_sdk import WebClient
 from slack.errors import SlackApiError
 from time import time
 
@@ -24,19 +25,78 @@ class Moonbeam:
         if 'BOT_TOKEN' not in self.__config:
             raise RuntimeError("BOT_TOKEN not found in config")
         self.__web_client = WebClient(self.__config['BOT_TOKEN'])
-        self.__rtm_client = RTMClient(
-            token=self.__config.get("BOT_TOKEN"),
-            ping_interval=30,
-            auto_reconnect=True,
-        )
         self.__trigger_words = []
         self.__plugins = []
         self.__load_plugins()
-        self.__rtm_client.run_on(event='message')(self.__process_message)
-        self.__rtm_client.run_on(event='user_typing')(self.__process_typing)
-        self.__rtm_client.run_on(event='reaction_added')(self.__process_reaction_added)
-        self.__rtm_client.run_on(event='reaction_removed')(self.__process_reaction_removed)
-        self.__rtm_client.start()
+
+        app = Flask(__name__)
+
+        @app.route('/action', methods=['POST'])
+        def action():
+            payload = request.get_json()
+            if not payload:
+                return {}
+            type = payload.get("type")
+            if type == "url_verification":
+                return request.get_json().get("challenge")
+            if type == "event_callback":
+                event = payload.get("event")
+                event_type = event.get("type")
+                if event_type.startswith("message"):
+                    return self.__process_message(payload.get("event"))
+                if event_type == "reaction_added":
+                    return self.__process_reaction_added(payload.get("event"))
+                if event_type == "reaction_removed":
+                    return self.__process_reaction_removed(payload.get("event"))
+            return {}
+
+        app.run(host="0.0.0.0", port=5002)
+
+    def __process_message(self, message):
+        self.__log.info(json.dumps(message, indent=2))
+        for plugin in self.__plugins:
+            try:
+                responses = plugin.receive(message)
+                if responses and isinstance(responses, dict):
+                    self.__post_message(responses)
+                elif responses and isinstance(responses, list):
+                    if len(responses) == 2 and isinstance(responses[1], dict) and isinstance(responses[1].get(True), dict):
+                            [responses, conditionals] = responses
+                            for response in responses:
+                                self.__post_message(response, conditionals)
+                    else:
+                        for response in responses:
+                            if isinstance(response, dict) and response:
+                                self.__post_message(response)
+                else:
+                    self.__log.debug(f"{plugin.__class__.__name__} didn't need to do anything with that message")
+            except Exception as e:
+                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to message: {e}")
+        return {}
+
+    def __process_reaction_added(self, data):
+        self.__log.debug(json.dumps(data, indent=2))
+        for plugin in self.__plugins:
+            try:
+                responses = plugin.reaction(data, added=True)
+                if responses:
+                    for response in responses:
+                        self.__post_message(response)
+            except Exception as e:
+                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to reaction added: {e}")
+        return {}
+
+    def __process_reaction_removed(self, data):
+        self.__log.debug(json.dumps(data, indent=2))
+        for plugin in self.__plugins:
+            try:
+                responses = plugin.reaction(data, added=False)
+                if responses:
+                    for response in responses:
+                        self.__post_message(response)
+            except Exception as e:
+                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to reaction removed: {e}")
+        return {}
 
     def __post_message(self, response, conditionals=None):
         channel = response.get('channel')
@@ -93,65 +153,6 @@ class Moonbeam:
         for key in mappings.keys():
             message = message.replace(key, mappings[key])
         return message
-
-    def __process_message(self, **payload):
-        message = payload['data']
-        self.__web_client = payload['web_client']
-        self.__log.info(json.dumps(message, indent=2))
-        for plugin in self.__plugins:
-            try:
-                responses = plugin.receive(message)
-                if responses and isinstance(responses, dict):
-                    self.__post_message(responses)
-                elif responses and isinstance(responses, list):
-                    if len(responses) == 2 and isinstance(responses[1], dict) and isinstance(responses[1].get(True), dict):
-                            [responses, conditionals] = responses
-                            for response in responses:
-                                self.__post_message(response, conditionals)
-                    else:
-                        for response in responses:
-                            if isinstance(response, dict) and response:
-                                self.__post_message(response)
-                else:
-                    self.__log.debug(f"{plugin.__class__.__name__} didn't need to do anything with that message")
-            except Exception as e:
-                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to message: {e}")
-
-    def __process_typing(self, **payload):
-        data = payload['data']
-        self.__log.debug(json.dumps(data, indent=2))
-        for plugin in self.__plugins:
-            try:
-                responses = plugin.typing(data)
-                if responses:
-                    for response in responses:
-                        self.__post_message(response)
-            except Exception as e:
-                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to typing: {e}")
-
-    def __process_reaction_added(self, **payload):
-        data = payload['data']
-        self.__log.debug(json.dumps(data, indent=2))
-        for plugin in self.__plugins:
-            try:
-                responses = plugin.reaction(data, added=True)
-                if responses:
-                    for response in responses:
-                        self.__post_message(response)
-            except Exception as e:
-                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to reaction added: {e}")
-
-    def __process_reaction_removed(self, **payload):
-        data = payload['data']
-        self.__log.debug(json.dumps(data, indent=2))
-        for plugin in self.__plugins:
-            try:
-                responses = plugin.reaction(data, added=False)
-                if responses:
-                    for response in responses:
-                        self.__post_message(response)
-            except Exception as e:
-                self.__log.exception(f"Encountered an exception with {plugin.__class__.__name__} responding to reaction removed: {e}")
 
     def __load_config(self, prefix):
         config = {}
