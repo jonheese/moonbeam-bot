@@ -16,7 +16,7 @@ class HelpPlugin(plugin.NoBotPlugin):
                             "`Moonbeam archive <search-string>` - Return a link to search the Slack archive for the given search string\n" + \
                             "`Moonbeam movie(s) <search-string>` - Return The Movie Database (TMDB) results for the given search string\n" + \
                             "`Moonbeam post <channel-name> <message>` - Command Moonbeam to post `<message>` in channel `<channel-name>`\n" + \
-                            "`Moonbeam roll <dice>` - Roll dice, `<dice>` format is MdN where M is the number of dice and N is how many sides are on each die, also accepts modifiers like `+` and `-` (eg. 3d8+2)\n" + \
+                            "`Moonbeam roll <dice>` - Roll dice, `<dice>` format is _MdN_ where _M_ is the number of dice and _N_ is how many sides are on each die, also accepts modifiers like `+` and `-` (eg. 3d8+2)\n" + \
                             "`Moonbeam weather [[N] <period-type>] [zipcode]` - Return Weatherbit weather forecast for the optional _N_ time periods of _period-type_ (default 5 days) and optional _zipcode_ (default 18104)\n" + \
                             "`covid-deaths` - Return the current COVID-19 death rates for the world and the US\n" + \
                             "`covid-cases` - Return the current COVID-19 case rates for the world and the US\n" + \
