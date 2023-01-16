@@ -13,7 +13,7 @@ class TheWeekendPlugin(plugin.NoBotPlugin):
     def __init__(self, web_client, plugin_config):
         super().__init__(web_client=web_client, plugin_config=plugin_config)
 
-        @aiocron.crontab('00 17 * * FRI')
+        @aiocron.crontab('00 17 * * THU')
         @asyncio.coroutine
         def friday():
 
@@ -29,7 +29,7 @@ class TheWeekendPlugin(plugin.NoBotPlugin):
             choices = [ x['url'] for x in result.json()['data'] ]
 
             yield from self.__post_message(
-                "#random",
+                "#test",
                 f"Ladies and Gentlemen, the weekend\n{random.choice(choices)}"
             )
 

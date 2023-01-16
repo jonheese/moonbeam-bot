@@ -19,10 +19,11 @@ class SpeakerForTheDeadPlugin(plugin.NoBotPlugin):
         @aiocron.crontab('00 * * * *')  # Hourly at the top of the hour
         @asyncio.coroutine
         def check_feed():
-
+            self._log.info("SpeakerForTheDead hourly TMZ check")
             news = feedparser.parse(self._config.get("TMZ_RSS_URI"))
 
             for entry in news.entries:
+                self._log.info(f"Checking entry {entry.title}")
                 for trigger in self._config.get("TRIGGERS"):
                     if re.compile(r'\b({0})\b'.format(re.escape(trigger)), flags=re.IGNORECASE).search(entry.title) and \
                             arrow.get(entry.updated) > self.last_checked:

@@ -69,7 +69,8 @@
         "AUTOSCOOGLE_CSE_ID": "your-googleapis-cse-site-id"
     },
     "WeatherPlugin": {
-        "WEATHERBIT_API_KEY": "API_KEY",
+        "RAPIDAPI_API_KEY": "API_KEY",
+        "RAPIDAPI_API_HOST": "API_KEY",
         "DARKSKY_API_KEY": "API_KEY"
     },
     "ImpatientPlugin": {

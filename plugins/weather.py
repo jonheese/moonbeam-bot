@@ -7,6 +7,7 @@ import math
 import pgeocode
 import re
 import requests
+import simplejson
 import traceback
 
 class WeatherPlugin(plugin.NoBotPlugin):
@@ -16,14 +17,29 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
 
     def __get_daily_weather_data(self, days, datecode, zipcode):
-        api_key = self._config.get('WEATHERBIT_API_KEY')
-        url = 'https://api.weatherbit.io/v2.0/forecast/daily?' + \
-              f'postal_code={zipcode}&days={days}&key={api_key}&units=I'
+        api_key = self._config.get('RAPIDAPI_API_KEY')
+        api_host = self._config.get('RAPIDAPI_API_HOST')
+        url = f'https://{api_host}/forecast/daily'
         if not api_key:
-            self._log.debug("Didn't find a weatherbit API key")
+            self._log.debug("Didn't find a RapidAPI API key")
             return []
+        if not api_host:
+            self._log.debug("Didn't find a RapidAPI API host")
+            return []
+        (lat, lon) = self.__get_latlon_from_zipcode(zipcode)
+        headers = {
+            "X-RapidAPI-Key": api_key,
+            "X-RapidAPI-Host": api_host,
+        }
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "units": "imperial",
+            "lang":"en",
+            "days": days,
+        }
         try:
-            response = requests.get(url).json()
+            response = requests.request("GET", url, headers=headers, params=params).json()
         except simplejson.errors.JSONDecodeError:
             self._log.error("Got invalid JSON from API:")
             self._log.error(requests.get(url))
@@ -42,7 +58,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
     def __get_latlon_from_zipcode(self, zipcode):
         data = pgeocode.Nominatim('us').query_postal_code(zipcode)
-        return f"{data.get('latitude')},{data.get('longitude')}"
+        return (data.get('latitude'), data.get('longitude'))
 
 
     def __get_hourly_weather_data(self, hours, datecode, zipcode):
@@ -50,8 +66,8 @@ class WeatherPlugin(plugin.NoBotPlugin):
         if not api_key:
             self._log.debug("Didn't find a DarkSky API key")
             return []
-        latlon = self.__get_latlon_from_zipcode(zipcode)
-        url = f'https://api.darksky.net/forecast/{api_key}/{latlon}'
+        (lat, lon) = self.__get_latlon_from_zipcode(zipcode)
+        url = f'https://api.darksky.net/forecast/{api_key}/{lat},{lon}'
         try:
             response = requests.get(url).json()
         except simplejson.errors.JSONDecodeError:
@@ -290,16 +306,15 @@ class WeatherPlugin(plugin.NoBotPlugin):
             self._log.debug(f"Got weather request: {request['text']}")
             command = request['text'].replace('<tel:', '').replace('>', '').split()
             days = self.__get_days(command)
-            if days > 7:
+            if days > 16:
                 responses.append(
                     {
                         'channel': request['channel'],
                         'text': f"I'm sorry <@{request['user']}>, " +
-                            "7 days is the longest forecast I can make!  I know "
-                            "it's fucking stupid, and I'm sorry :disappointed:",
+                            "16 days is the longest forecast I can make.",
                     }
                 )
-                days = 7
+                days = 16
             zipcode = self.__get_zipcode(command)
             if days < 0:
                 datecode = (
