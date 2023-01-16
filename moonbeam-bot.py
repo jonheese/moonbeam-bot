@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3
 
+from collections import deque
 from flask import Flask, request
 from slack_sdk import WebClient
 from slack.errors import SlackApiError
@@ -28,6 +29,7 @@ class Moonbeam:
         self.__trigger_words = []
         self.__plugins = []
         self.__load_plugins()
+        self.__recent_client_msg_ids = deque(maxlen=100)
 
         app = Flask(__name__)
 
@@ -41,13 +43,17 @@ class Moonbeam:
                 return request.get_json().get("challenge")
             if type == "event_callback":
                 event = payload.get("event")
+                if event.get('client_msg_id'):
+                    if event['client_msg_id'] in self.__recent_client_msg_ids:
+                        return {}
+                    self.__recent_client_msg_ids.append(event['client_msg_id'])
                 event_type = event.get("type")
                 if event_type.startswith("message"):
-                    return self.__process_message(payload.get("event"))
+                    return self.__process_message(event)
                 if event_type == "reaction_added":
-                    return self.__process_reaction_added(payload.get("event"))
+                    return self.__process_reaction_added(event)
                 if event_type == "reaction_removed":
-                    return self.__process_reaction_removed(payload.get("event"))
+                    return self.__process_reaction_removed(event)
             return {}
 
         app.run(host="0.0.0.0", port=5002)

@@ -4,6 +4,7 @@ from pyzipcode import ZipCodeDatabase
 
 import json
 import math
+import numpy
 import pgeocode
 import re
 import requests
@@ -27,6 +28,8 @@ class WeatherPlugin(plugin.NoBotPlugin):
             self._log.debug("Didn't find a RapidAPI API host")
             return []
         (lat, lon) = self.__get_latlon_from_zipcode(zipcode)
+        if not lat or not lon:
+            return []
         headers = {
             "X-RapidAPI-Key": api_key,
             "X-RapidAPI-Host": api_host,
@@ -58,7 +61,13 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
     def __get_latlon_from_zipcode(self, zipcode):
         data = pgeocode.Nominatim('us').query_postal_code(zipcode)
-        return (data.get('latitude'), data.get('longitude'))
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        if numpy.isnan(latitude):
+            latitude = False
+        if numpy.isnan(longitude):
+            longitude = False
+        return (latitude, longitude)
 
 
     def __get_hourly_weather_data(self, hours, datecode, zipcode):
