@@ -56,6 +56,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
         return {
             'name': self.__get_citystate_by_zipcode(zipcode),
             'wxInfo': response['data'],
+            'period': 'daily',
         }
 
 
@@ -71,43 +72,46 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
 
     def __get_hourly_weather_data(self, hours, datecode, zipcode):
-        api_key = self._config.get('DARKSKY_API_KEY')
+        api_key = self._config.get('RAPIDAPI_API_KEY')
+        api_host = self._config.get('RAPIDAPI_API_HOST')
+        url = f'https://{api_host}/forecast/hourly'
         if not api_key:
-            self._log.debug("Didn't find a DarkSky API key")
+            self._log.debug("Didn't find a RapidAPI API key")
+            return []
+        if not api_host:
+            self._log.debug("Didn't find a RapidAPI API host")
             return []
         (lat, lon) = self.__get_latlon_from_zipcode(zipcode)
-        url = f'https://api.darksky.net/forecast/{api_key}/{lat},{lon}'
+        if not lat or not lon:
+            return []
+        headers = {
+            "X-RapidAPI-Key": api_key,
+            "X-RapidAPI-Host": api_host,
+        }
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "units": "imperial",
+            "lang":"en",
+            "hours": hours,
+        }
         try:
-            response = requests.get(url).json()
+            response = requests.request("GET", url, headers=headers, params=params).json()
         except simplejson.errors.JSONDecodeError:
             self._log.error("Got invalid JSON from API:")
             self._log.error(requests.get(url))
             return []
-        if 'hourly' not in response:
+        if 'data' not in response:
             self._log.debug(
-                "Didn't find  the key 'hourly' in the response: " +
+                "Didn't find  the key 'data' in the response: " +
                 json.dumps(response, indent=2)
             )
             return []
-        hourly_data = response['hourly'].get('data')
-        wx_info = []
-        count = 0
-        for hour in hourly_data:
-            hour_info = {}
-            hour_info["temp"] = hour.get("temperature")
-            hour_info["app_temp"] = hour.get("apparentTemperature")
-            hour_info["precip_prob"] = hour.get("precipProbability")
-            hour_info["summary"] = hour.get("summary")
-            hour_info["ts"] = hour.get("time")
-            wx_info.append(hour_info)
-            count += 1
-            if count >= hours:
-                break
         return {
             'name': self.__get_citystate_by_zipcode(zipcode),
-            'wxInfo': wx_info,
+            'wxInfo': response['data'],
+            'period': 'hourly',
         }
-
 
     def __get_forecast_table(self, forecast, weather_info):
         if not weather_info:
@@ -117,19 +121,23 @@ class WeatherPlugin(plugin.NoBotPlugin):
             if day.get('snow') and float(day.get('snow')) > 0.0:
                 snow_found = True
                 break
-        hourly = weather_info.get('wxInfo')[0].get('precip_prob') is not None
+        hourly = weather_info.get('period') == 'hourly'
         block = []
         block.append('```')
         if hourly:
-            block.append('Hour     Temp   Feels   Rain%  Summary')
-            block.append('==============================================')
+            block.append('Hour     Temp   Feels   Rain%  Wind (Gust)      Summary')
+            block.append('===============================================================')
         elif snow_found:
-            block.append('Date       High    Low    Rain  Snow')
-            block.append('=====================================')
+            block.append('Date       High    Low    Rain  Snow  Wind (Gust)      Summary')
+            block.append('======================================================================')
         else:
-            block.append('Date       High    Low    Rain')
-            block.append('===============================')
+            block.append('Date       High    Low    Rain  Wind (Gust)      Summary')
+            block.append('================================================================')
         for day in weather_info.get('wxInfo'):
+            self._log.debug(json.dumps(day, indent=2))
+            wind_spd = str(day.get('wind_spd'))
+            wind_cdir = str(day.get('wind_cdir'))
+            wind_gust_spd = str(day.get('wind_gust_spd'))
             if hourly:
                 hod = datetime.fromtimestamp(day.get('ts')).strftime('%H:00')
                 temp = "{:-03.1f}".format(float(day.get('temp')))
@@ -139,10 +147,11 @@ class WeatherPlugin(plugin.NoBotPlugin):
                     precip_prob = '  ---'
                 else:
                     precip_prob = '{:4d}%'.format(int(float(precip_prob) * 100))
-                summary = day.get("summary")
+                summary = day.get("weather").get("description")
+                wind_padding = (12 - (len(wind_spd) + len(wind_cdir) + len(wind_gust_spd))) * " "
                 block.append(f"{hod}:  {temp}°F " +
                     f" {app_temp}°F  {precip_prob} " +
-                    f" {summary}")
+                    f" {wind_spd} {wind_cdir} ({wind_gust_spd}) {wind_padding}{summary}")
             else:
                 date = datetime.strptime(
                     day.get('datetime')[:10],
@@ -162,17 +171,21 @@ class WeatherPlugin(plugin.NoBotPlugin):
                         snow = '---- '
                     else:
                         snow = '{:02.2f}"'.format(float(snow))
+                summary = day.get("weather").get("description")
                 high_padding = (5 - len(max_temp)) * " "
                 low_padding = (5 - len(min_temp)) * " "
                 prcp_padding = (4 - len(prcp)) * " "
+                wind_padding = (12 - (len(wind_spd) + len(wind_cdir) + len(wind_gust_spd))) * " "
                 if snow_found:
                     snow_padding = (4 - len(snow)) * " "
                     block.append(f"{dow}: {high_padding}{max_temp}°F " +
                         f"{low_padding}{min_temp}°F  {prcp_padding}{prcp} " +
-                        f"{snow_padding}{snow}")
+                        f"{snow_padding}{snow}" +
+                        f" {wind_spd} {wind_cdir} ({wind_gust_spd}) {wind_padding}{summary}")
                 else:
-                    block.append(f"{dow}: {high_padding}{max_temp}°F "
-                        f"{low_padding}{min_temp}°F  {prcp_padding}{prcp}")
+                    block.append(f"{dow}: {high_padding}{max_temp}°F " +
+                        f"{low_padding}{min_temp}°F  {prcp_padding}{prcp}" +
+                        f" {wind_spd} {wind_cdir} ({wind_gust_spd}) {wind_padding}{summary}")
         block.append('```')
         forecast.append(
             {
