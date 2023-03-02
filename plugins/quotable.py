@@ -29,9 +29,11 @@ class QuotablePlugin(plugin.NoBotPlugin):
                 json.dump(quotes, f, indent=2)
             return
 
-    def __get_quote(self):
+    def __get_quote(self, index=None):
         seed()
         quotes = self.__read_quotes()
+        if index is not None:
+            return quotes[index]
         return quotes[randint(0, 1000) % len(quotes)]
 
     def __build_message(self, text, channel):
@@ -40,9 +42,9 @@ class QuotablePlugin(plugin.NoBotPlugin):
             'text': text,
         }
 
-    def __get_quote_message(self, channel, quote=None):
+    def __get_quote_message(self, channel, quote=None, index=None):
         if not quote:
-            quote = self.__get_quote()
+            quote = self.__get_quote(index)
         split_quote = quote.split(" - ")
         split_attribution = split_quote[1].split(",")
         person = split_attribution[0]
@@ -71,7 +73,9 @@ class QuotablePlugin(plugin.NoBotPlugin):
     def __show_usage(self, request):
         random_quote = self.__get_quote()
         text = f"<@{request['user']}>, to add a quote to my database, your message must follow the format: `Moonbeam add-quote <quote> - <attribution>`" + \
-               f", eg. `Moonbeam add-quote {random_quote}`"
+               f", eg. `Moonbeam add-quote {random_quote}`\n" + \
+               f"To retrieve a quote from my database by index, your message must follow the format: `Moonbeam quotable post <quote_index>`" + \
+               f", eg. `Moonbeam quotable post 13`"
         return self.__build_message(text, request['channel'])
 
     def __add_success(self, request, quote, responses):
@@ -130,6 +134,24 @@ class QuotablePlugin(plugin.NoBotPlugin):
             self._log.info("printing quotable:")
             self._log.info(quote['text'])
             responses.append(quote)
+        elif "quotable" in text.lower() and "post" in text.lower():
+            index_index = -1
+            word_index = -1
+            words = text.lower().split()
+            for word in words:
+                word_index += 1
+                if word == 'post':
+                    index_index = word_index+1
+                    break
+            if index_index >= 0:
+                self._log.info(f'index_index is {index_index}')
+                try:
+                    quote_index = int(words[index_index])
+                    self._log.info(f'quote_index is {quote_index}')
+                    responses.append(self.__get_quote_message(channel=channel, index=quote_index))
+                except Exception as e:
+                    self._log.exception(e)
+                    responses.append(self.__show_usage(request))
         elif "quotable" in text.lower() and "stats" in text.lower():
             responses.append(self.__build_message(self.__get_stats(), channel))
         elif text.lower().startswith('moonbeam') and "add-quote" in text.lower():
