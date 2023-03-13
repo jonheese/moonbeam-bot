@@ -125,23 +125,23 @@ class WeatherPlugin(plugin.NoBotPlugin):
         block = []
         block.append('```')
         if hourly:
-            block.append('Hour     Temp   Feels   Rain%   Wind (Gust)      Summary')
+            block.append('Hour     Temp   Feels   Rain%    Wind (Gust)       Summary')
             block.append('=================================================================')
         elif snow_found:
-            block.append('Date       High    Low    Rain  Snow   Wind (Gust)     Summary')
+            block.append('Date       High    Low    Rain  Snow    Wind (Gust)      Summary')
             block.append('=======================================================================')
         else:
-            block.append('Date       High    Low    Rain   Wind (Gust)     Summary')
+            block.append('Date       High    Low    Rain    Wind (Gust)      Summary')
             block.append('=================================================================')
         for day in weather_info.get('wxInfo'):
             self._log.debug(json.dumps(day, indent=2))
             wind_spd = "{:03.1f}".format(float(day.get('wind_spd')))
             wind_cdir = str(day.get('wind_cdir'))
             wind_gust_spd = "{:03.1f}".format(float(day.get('wind_gust_spd')))
-            wind_padding = (4 - len(wind_spd)) * " "
+            wind_padding = (5 - len(wind_spd)) * " "
             cdir_padding = (3 - len(wind_cdir)) * " "
             gust_padding = (4 - len(wind_gust_spd)) * " "
-            summary_padding = (12 - len(
+            summary_padding = (13 - len(
                 wind_padding + wind_spd + cdir_padding +
                 wind_cdir + gust_padding + wind_gust_spd
             )) * " "
@@ -155,7 +155,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 else:
                     precip_prob = '{:4d}%'.format(int(float(precip_prob) * 100))
                 summary = day.get("weather").get("description")
-                summary_padding = (12 - (len(wind_spd) + len(wind_cdir) + len(wind_gust_spd))) * " "
+                summary_padding = (6 - (len(wind_spd))) * " "
                 block.append(f"{hod}:  {temp}°F " +
                     f" {app_temp}°F  {precip_prob} " +
                     f" {wind_padding}{wind_spd} {cdir_padding}{wind_cdir}" +
@@ -184,7 +184,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
                 low_padding = (5 - len(min_temp)) * " "
                 prcp_padding = (4 - len(prcp)) * " "
                 if snow_found:
-                    snow_padding = (4 - len(snow)) * " "
+                    snow_padding = (6 - len(snow)) * " "
                     block.append(f"{dow}: {high_padding}{max_temp}°F " +
                         f"{low_padding}{min_temp}°F  {prcp_padding}{prcp} " +
                         f"{snow_padding}{snow}" +
