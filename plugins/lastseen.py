@@ -76,10 +76,11 @@ class LastSeenPlugin(plugin.NoBotPlugin):
                     tz=pytz.timezone('America/New_York')
                 )
             )
-            return f"The last time I saw {last_sighting[0]} ({last_sighting[1]}) was at {timestamp} in " + \
-                f"<#{last_sighting[3]}> ({last_sighting[4]}) when they said: \n" + \
-                f"{last_sighting[5]}\n" + \
-                f">>>{last_sighting[6]}"
+            message = f"The last time I saw {last_sighting[0]} ({last_sighting[1]}) was at {timestamp} in " + \
+                f"<#{last_sighting[3]}> ({last_sighting[4]}) when they said: \n"
+            if last_sighting[5]:
+                message += f"{last_sighting[5]}\n"
+            message += f">>>{last_sighting[6]}"
         else:
             return "Sorry, I don't have any record of that user ever posting anything."
 
