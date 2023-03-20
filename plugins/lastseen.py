@@ -81,6 +81,7 @@ class LastSeenPlugin(plugin.NoBotPlugin):
             if last_sighting[5]:
                 message += f"{last_sighting[5]}\n"
             message += f">>>{last_sighting[6]}"
+            return message
         else:
             return "Sorry, I don't have any record of that user ever posting anything."
 
