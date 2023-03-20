@@ -48,6 +48,12 @@
         "DB_USER": "slack_archive",
         "DB_PASSWORD": "PASSWORD"
     },
+    "LastSeenPlugin" : {
+        "DB_HOST": "localhost",
+        "DB_NAME": "slack_archive",
+        "DB_USER": "slack_archive",
+        "DB_PASSWORD": "PASSWORD"
+    },
     "AutoScooglePlugin": {
         "AUTOSCOOGLE_USERS": [
             "SLACKUSERID",

@@ -14,6 +14,7 @@ class HelpPlugin(plugin.NoBotPlugin):
                             "`Moonbeam add-quote <quote> - <attribution>` - Add a quote to the Quotable database (there is no need to use double-quotes in your message)\n" + \
                             "`Moonbeam add-trigger <trigger> - <reply>` - Add a trigger/reply to my trigger database (NOTE: Multiple replies can be given for a single trigger with subsequent requests and replies will be chosen at random when triggered)\n" + \
                             "`Moonbeam archive <search-string>` - Return a link to search the Slack archive for the given search string\n" + \
+                            "`Moonbeam lastseen <search-string>` - Search for a Slack user by the given search string (either username or full name) and return the last time they posted to the team\n" + \
                             "`Moonbeam movie(s) <search-string>` - Return The Movie Database (TMDB) results for the given search string\n" + \
                             "`Moonbeam post <channel-name> <message>` - Command Moonbeam to post `<message>` in channel `<channel-name>`\n" + \
                             "`Moonbeam roll <dice>` - Roll dice, `<dice>` format is _MdN_ where _M_ is the number of dice and _N_ is how many sides are on each die, also accepts modifiers like `+` and `-` (eg. 3d8+2)\n" + \
