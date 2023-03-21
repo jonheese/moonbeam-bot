@@ -51,30 +51,30 @@ class LastSeenPlugin(plugin.NoBotPlugin):
 
     def __get_last_seen(self, name):
         records = self.__get_last_seen_by_user_ids(user_ids=self.__search_for_user(name=name))
-        last_sighting = None
-        for record in records:
-            if not record:
-                continue
-            self._log.info(json.dumps(record, indent=2))
-            timestamp = int(record[2])
-            if not last_sighting:
-                last_sighting = record
-            else:
-                if timestamp > last_sighting[2]:
-                    last_sighting = record
+        if records:
+            last_sighting = {
+                'username': records[0][0],
+                'full_name': records[0][1],
+                'timestamp': records[0][2],
+                'slack_channel_id': records[0][3],
+                'team_name': records[0][4],
+                'archive_url': records[0][5],
+                'text': records[0][6],
+            }
 
-        if last_sighting:
             timestamp = str(
                 datetime.fromtimestamp(
-                    timestamp=last_sighting[2],
+                    timestamp=last_sighting['timestamp'],
                     tz=pytz.timezone('America/New_York')
                 )
             )
-            message = f"The last time I saw {last_sighting[0]} ({last_sighting[1]}) was at {timestamp} in " + \
-                f"<#{last_sighting[3]}> ({last_sighting[4]}) when they said: \n"
-            if last_sighting[5]:
-                message += f"{last_sighting[5]}\n"
-            message += f">>>{last_sighting[6]}"
+            message = \
+                f"The last time I saw {last_sighting['username']} ({last_sighting['full_name']}) " + \
+                f"was at {timestamp} in <#{last_sighting['slack_channel_id']}> ({last_sighting['team_name']}) " + \
+                f"when they said: \n"
+            if last_sighting['archive_url']:
+                message += f"{last_sighting['archive_url']}\n"
+            message += f">>>{last_sighting['text']}"
             return message
         else:
             return "Sorry, I don't have any record of that user ever posting anything."
