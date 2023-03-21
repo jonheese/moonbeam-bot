@@ -40,12 +40,14 @@ class LastSeenPlugin(plugin.NoBotPlugin):
 
     def __get_last_seen_by_user_ids(self, user_ids):
         self._log.info(f"Getting last seen for user IDs: {user_ids}")
+        if not user_ids:
+            return []
         query = \
             "SELECT u.username, u.full_name, m.timestamp, c.slack_channel_id, t.team_name, " +\
             "m.archive_url, m.text " + \
             "FROM tbl_messages m JOIN tbl_users u ON u.id = m.user_id " + \
             "JOIN tbl_channels c ON c.id = m.channel_id " + \
-            f"JOIN tbl_teams t ON t.id = m.team_id WHERE u.id in ({','.join(str(user_id) for user_id in user_ids)})" + \
+            f"JOIN tbl_teams t ON t.id = m.team_id WHERE u.id in ({','.join(str(user_id) for user_id in user_ids)}) " + \
             "ORDER BY m.timestamp DESC LIMIT 1"
         return self.__select(query=query)
 
