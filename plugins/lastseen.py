@@ -32,31 +32,25 @@ class LastSeenPlugin(plugin.NoBotPlugin):
         cursor.close()
         return records
 
-    def __get_last_seen_by_username(self, username):
-        self._log.info(f"Looking for lastseen of user {username}")
-        query = \
-            "SELECT u.username, u.full_name, m.timestamp, c.slack_channel_id, t.team_name, " +\
-            "m.archive_url, m.text " + \
-            "FROM tbl_messages m JOIN tbl_users u ON u.id = m.user_id " + \
-            "JOIN tbl_channels c ON c.id = m.channel_id " + \
-            f"JOIN tbl_teams t ON t.id = m.team_id WHERE u.username LIKE '%{username}%' " + \
-            "ORDER BY m.timestamp DESC LIMIT 1"
-        return self.__select(query=query)
+    def __search_for_user(self, name):
+        self._log.info(f"Searching for user named '{name}'")
+        query = f"SELECT id FROM tbl_users WHERE username LIKE '%{name}%' OR full_name like '%{name}%'"
+        results = self.__select(query=query)
+        return [result[0] for result in results]
 
-    def __get_last_seen_by_full_name(self, full_name):
-        self._log.info(f"Looking for lastseen of user {full_name}")
+    def __get_last_seen_by_user_ids(self, user_ids):
+        self._log.info(f"Getting last seen for user IDs: {user_ids}")
         query = \
             "SELECT u.username, u.full_name, m.timestamp, c.slack_channel_id, t.team_name, " +\
             "m.archive_url, m.text " + \
             "FROM tbl_messages m JOIN tbl_users u ON u.id = m.user_id " + \
             "JOIN tbl_channels c ON c.id = m.channel_id " + \
-            f"JOIN tbl_teams t ON t.id = m.team_id WHERE u.full_name LIKE '%{full_name}%' " + \
+            f"JOIN tbl_teams t ON t.id = m.team_id WHERE u.id in ({','.join(str(user_id) for user_id in user_ids)})" + \
             "ORDER BY m.timestamp DESC LIMIT 1"
         return self.__select(query=query)
 
     def __get_last_seen(self, name):
-        records = self.__get_last_seen_by_username(username=name)
-        records.extend(self.__get_last_seen_by_full_name(full_name=name))
+        records = self.__get_last_seen_by_user_ids(user_ids=self.__search_for_user(name=name))
         last_sighting = None
         for record in records:
             if not record:
