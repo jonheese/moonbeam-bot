@@ -2,6 +2,7 @@ from . import plugin
 from mysql.connector import Error
 import json
 import mysql.connector
+import time
 
 class DBStorePlugin(plugin.Plugin):
     def __init__(self, web_client, plugin_config):
@@ -34,6 +35,8 @@ class DBStorePlugin(plugin.Plugin):
 
     def __store_message(self, data):
         self.__check_init_cache()
+        # Sleep for 1 second to eliminate possible race condition for lastseen
+        time.sleep(1)
         if data.get("subtype") == "message_changed":
             message = data.get("message")
             if message:
