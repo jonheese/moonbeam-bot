@@ -47,7 +47,9 @@ class LastSeenPlugin(plugin.NoBotPlugin):
             "m.archive_url, m.text " + \
             "FROM tbl_messages m JOIN tbl_users u ON u.id = m.user_id " + \
             "JOIN tbl_channels c ON c.id = m.channel_id " + \
-            f"JOIN tbl_teams t ON t.id = m.team_id WHERE u.id in ({','.join(str(user_id) for user_id in user_ids)}) " + \
+            "JOIN tbl_teams t ON t.id = m.team_id " + \
+            f"WHERE u.id in ({','.join(str(user_id) for user_id in user_ids)}) " + \
+            "AND m.text not like '%has joined the channel%' " + \
             "ORDER BY m.timestamp DESC LIMIT 1"
         return self.__select(query=query)
 
