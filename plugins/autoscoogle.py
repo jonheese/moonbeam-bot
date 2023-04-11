@@ -43,7 +43,7 @@ class AutoScooglePlugin(plugin.NoBotPlugin):
             if trigger in text.lower():
                 if trigger.startswith("what"):
                     subject = text
-                elif trigger.startswith("who"):
+                elif trigger.startswith("who") or trigger.startswith("autoscoogle"):
                     subject = text.replace(trigger, "")
                 else:
                     subject = "what is " + text.replace(trigger, "")
