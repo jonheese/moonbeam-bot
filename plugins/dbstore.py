@@ -215,10 +215,13 @@ class DBStorePlugin(plugin.Plugin):
             self.__cache["channels"][slack_channel_id] = channel_id
 
         message_id = self.__select(f"select id from tbl_messages where team_id = {team_id} and user_id = {item_user_id} and channel_id = {channel_id} and timestamp = {timestamp}")[0][0]
-        emoji_id = self.__select(f"select id from tbl_emojis where team_id = {team_id} and emoji_trigger = '{reaction}'")[0][0]
-        self._log.debug(f"Got emoji_id {emoji_id}")
-        if emoji_id:
+        emoji_id = self.__select(f"select id from tbl_emojis where team_id = {team_id} and emoji_trigger = '{reaction}'")
+        if emoji_id and emoji_id[0]:
+            emoji_id = emoji_id[0][0]
+            self._log.debug(f"Got emoji_id {emoji_id}")
             reaction_id = self.__insert_delete_reaction(message_id, user_id, emoji_id, added)
+        else:
+            self._log.debug(f'Unable to find emoji for emoji trigger: {reaction}')
 
     def __insert_delete_reaction(self, message_id, user_id, emoji_id, added=True):
         reaction_id = self.__get_reaction_id(message_id, user_id, emoji_id)
