@@ -2,6 +2,7 @@ from . import plugin
 from mysql.connector import Error
 import json
 import mysql.connector
+import re
 import time
 
 class DBStorePlugin(plugin.Plugin):
@@ -9,7 +10,6 @@ class DBStorePlugin(plugin.Plugin):
         super().__init__(web_client=web_client, plugin_config=plugin_config)
         self.__init_db()
         self.__cache = None
-
 
     def __init_db(self):
         try:
@@ -23,7 +23,6 @@ class DBStorePlugin(plugin.Plugin):
             self._log.exception(f"Failed to connect to db: {e}")
             self.__conn = None
 
-
     def __check_init_cache(self):
         if not self.__cache:
             self.__cache = {
@@ -32,6 +31,36 @@ class DBStorePlugin(plugin.Plugin):
                 "teams": {},
             }
 
+    def __handle_polly_message(self, data, text):
+        self._log.debug('Got Polly message')
+        choice_type = 'actions'
+        action_choices = ''
+        field_choices = ''
+        context = ''
+        for block in data.get('blocks'):
+            if block['type'] == 'section':
+                if block.get('text'):
+                    text += '\n' + block.get('text').get('text')
+                elif block.get('fields'):
+                    choice_type = 'fields'
+                    for field in block.get('fields'):
+                        field_choices += '\n' + field.get('text')
+            elif block['type'] == 'actions':
+                index = 1
+                for element in block.get('elements'):
+                    if element.get('text').get('text').startswith('View All Responses'):
+                        continue
+                    action_choices += f'\n{index}. {element.get("text").get("text")}'
+                    index += 1
+            elif block['type'] == 'context':
+                for element in block.get('elements'):
+                    context += '\n' + re.sub('<!date\^[0-9]{10}\^{date_short}\ at\ {time}\|(.*)>', r'\1', element.get('text'))
+        if choice_type == 'actions':
+            choices = action_choices
+        else:
+            choices = field_choices
+        text = text + choices + context.replace('*:', '* :').replace(':*', ': *')
+        return text
 
     def __store_message(self, data):
         self.__check_init_cache()
@@ -51,21 +80,22 @@ class DBStorePlugin(plugin.Plugin):
                         is_image=is_image,
                         text=text,
                     )
+                elif message['username'] == 'Polly':
+                    self.__update_message(
+                        client_msg_id=None,
+                        is_image=False,
+                        timestamp=message['ts'].split('.')[0],
+                        text=self.__handle_polly_message(message, text),
+                    )
             return
 
         timestamp = data["ts"].split(".")[0]
-        #if "bot_id" in data.keys():
-        #    return
-        try:
-            slack_user_id = data.get("user")
-            if not slack_user_id:
-                slack_user_id = data.get("bot_id")
-        except KeyError as ke:
+        slack_user_id = data.get("user", data.get("bot_id"))
+        if not slack_user_id:
+            self._log.info('Could not find slack_user_id or bot_id in message')
             return
-        try:
-            slack_team_id = data["team"]
-        except KeyError as e:
-            return
+
+        slack_team_id = data.get("team")
         client_msg_id = data.get('client_msg_id')
         slack_channel_id = data["channel"]
         text = data["text"]
@@ -92,13 +122,20 @@ class DBStorePlugin(plugin.Plugin):
                     if block.get("type") == "image":
                         text = text + ": <" + block.get("image_url") + ">"
 
+            # Handle Polly polls
+            elif data.get('username') == 'Polly' or text == 'There is a new polly for you':
+                text = self.__handle_polly_message(data, text)
+
+
         files = []
         if "files" in data.keys():
             files = data['files']
         if "file" in data.keys():
             files.append(data['file'])
 
-        if not slack_team_id in self.__cache["teams"].keys():
+        if not slack_team_id:
+            team_id = self.__select("select id from tbl_teams where default_team = 1")[0][0]
+        elif not slack_team_id in self.__cache["teams"].keys():
             team_id = self.__insert("tbl_teams", "slack_team_id", slack_team_id, "slack_team_id", slack_team_id)
             self.__cache["teams"][slack_team_id] = team_id
         else:
@@ -130,7 +167,6 @@ class DBStorePlugin(plugin.Plugin):
         if "user_profile" in data.keys():
             self.__handle_user_profile(data['user_profile'], user_id)
 
-
     def __store_reaction(self, data, added=True):
         self.__check_init_cache()
         item = data.get("item")
@@ -148,7 +184,6 @@ class DBStorePlugin(plugin.Plugin):
             )
         return
 
-
     def __get_user_id_by_slack_user_id(self, slack_user_id=None, team_id=None):
         if not slack_user_id in self.__cache["users"].keys():
             columns = ["slack_user_id", "team_id"]
@@ -158,7 +193,6 @@ class DBStorePlugin(plugin.Plugin):
         else:
             user_id = self.__cache["users"][slack_user_id]
         return user_id
-
 
     def __add_remove_reaction(self, item=None, slack_user_id=None, reaction=None, item_slack_user_id=None, added=True):
         self._log.debug(f"Adding/removing reaction {reaction} to/from item {item} for slack_user_id {slack_user_id} ")
@@ -186,7 +220,6 @@ class DBStorePlugin(plugin.Plugin):
         if emoji_id:
             reaction_id = self.__insert_delete_reaction(message_id, user_id, emoji_id, added)
 
-
     def __insert_delete_reaction(self, message_id, user_id, emoji_id, added=True):
         reaction_id = self.__get_reaction_id(message_id, user_id, emoji_id)
         if reaction_id and added:
@@ -211,7 +244,6 @@ class DBStorePlugin(plugin.Plugin):
             reaction_id = False
         return reaction_id
 
-
     def __get_reaction_id(self, message_id, user_id, emoji_id):
         if not self.__conn or not self.__conn.is_connected():
             self.__init_db()
@@ -224,7 +256,6 @@ class DBStorePlugin(plugin.Plugin):
             return records[0][0]
         return False
 
-
     def __select(self, query):
         if not self.__conn or not self.__conn.is_connected():
             self.__init_db()
@@ -233,7 +264,6 @@ class DBStorePlugin(plugin.Plugin):
         records = cursor.fetchall()
         cursor.close()
         return records
-
 
     def __get_id(self, table, slack_id_column, slack_id):
         if not self.__conn or not self.__conn.is_connected():
@@ -246,7 +276,6 @@ class DBStorePlugin(plugin.Plugin):
         if records:
             return records
         return False
-
 
     def __insert(self, table, columns, values, slack_id_column, slack_id):
         item_id = self.__get_id(table, slack_id_column, slack_id)
@@ -276,7 +305,6 @@ class DBStorePlugin(plugin.Plugin):
         cursor.close()
         return item_id[0][0]
 
-
     def __get_message_id(self, timestamp, user_id):
         if not self.__conn or not self.__conn.is_connected():
             self.__init_db()
@@ -288,7 +316,6 @@ class DBStorePlugin(plugin.Plugin):
         if records:
             return records[0][0]
         return False
-
 
     def __insert_message(self, team_id, channel_id, user_id, timestamp, client_msg_id, archive_url, text):
         message_id = self.__get_message_id(timestamp, user_id)
@@ -307,17 +334,22 @@ class DBStorePlugin(plugin.Plugin):
         self._log.debug(f"Got message ID : ({message_id})")
         return message_id
 
-
-    def __update_message(self, client_msg_id, is_image, text):
+    def __update_message(self, client_msg_id, is_image, text, timestamp):
         if not self.__conn or not self.__conn.is_connected():
             self.__init_db()
         cursor = self.__conn.cursor()
-        query = "update tbl_messages set text = %s, is_image = %s where client_msg_id = %s"
-        self._log.debug(query % (text, is_image, client_msg_id))
-        cursor.execute(query, (text, is_image, client_msg_id))
+        if client_msg_id:
+            query = "update tbl_messages set text = %s, is_image = %s where client_msg_id = %s"
+            self._log.debug(query % (text, is_image, client_msg_id))
+            cursor.execute(query, (text, is_image, client_msg_id))
+        elif timestamp:
+            query = "update tbl_messages set text = %s, is_image = %s where timestamp = %s"
+            self._log.debug(query % (text, is_image, timestamp))
+            cursor.execute(query, (text, is_image, timestamp))
+        else:
+            raise RuntimeError('Either parameter client_msg_id or timestamp must be provided')
         self.__conn.commit()
         cursor.close()
-
 
     def __insert_file(self, file_data):
         if not self.__conn or not self.__conn.is_connected():
@@ -338,7 +370,6 @@ class DBStorePlugin(plugin.Plugin):
         self.__conn.commit()
         cursor.close()
 
-
     def __handle_files(self, files, message_id):
         for file_data in files:
             file = {
@@ -358,7 +389,6 @@ class DBStorePlugin(plugin.Plugin):
             elif 'title' in file_data.keys():
                 file['name'] = file_data['title']
             self.__insert_file(file)
-
 
     def __handle_user_profile(self, user_profile, user_id):
         subs = []
@@ -385,7 +415,6 @@ class DBStorePlugin(plugin.Plugin):
         self.__conn.commit()
         cursor.close()
 
-
     def reaction(self, request, added=True):
         try:
             self.__store_reaction(request, added)
@@ -394,7 +423,6 @@ class DBStorePlugin(plugin.Plugin):
         except Exception as e:
             self._log.exception(e)
         return []
-
 
     def receive(self, request):
         try:
