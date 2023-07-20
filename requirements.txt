@@ -1,5 +1,5 @@
 aiocron==1.8
-aiohttp==3.7.4
+aiohttp==3.8.5
 arrow==1.0.3
 beautifulsoup4==4.11.1
 feedparser==6.0.10
