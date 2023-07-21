@@ -17,6 +17,8 @@ class HelpPlugin(plugin.NoBotPlugin):
                             "`Moonbeam lastseen <search-string>` - Search for a Slack user by the given search string (either username or full name) and return the last time they posted to the team\n" + \
                             "`Moonbeam movie(s) <search-string>` - Return The Movie Database (TMDB) results for the given search string\n" + \
                             "`Moonbeam post <channel-name> <message>` - Command Moonbeam to post `<message>` in channel `<channel-name>`\n" + \
+                            "`Moonbeam quotable post <n>` - Post the _nth_ entry in the quotable database\n" + \
+                            "`Moonbeam quotable search <search_string>` - Search the quotable database and return the most relevant quote (will choose randomly to break a tie)\n" + \
                             "`Moonbeam roll <dice>` - Roll dice, `<dice>` format is _MdN_ where _M_ is the number of dice and _N_ is how many sides are on each die, also accepts modifiers like `+` and `-` (eg. 3d8+2)\n" + \
                             "`Moonbeam weather [[N] <period-type>] [zipcode]` - Return Weatherbit weather forecast for the optional _N_ time periods of _period-type_ (default 5 days) and optional _zipcode_ (default 18104)\n" + \
                             "`covid-deaths` - Return the current COVID-19 death rates for the world and the US\n" + \
