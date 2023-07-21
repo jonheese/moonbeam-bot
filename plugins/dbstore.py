@@ -80,13 +80,15 @@ class DBStorePlugin(plugin.Plugin):
                         is_image=is_image,
                         text=text,
                     )
-                elif message['username'] == 'Polly':
+                elif message.get('username') == 'Polly':
                     self.__update_message(
                         client_msg_id=None,
                         is_image=False,
                         timestamp=message['ts'].split('.')[0],
                         text=self.__handle_polly_message(message, text),
                     )
+                else:
+                    self._log.error(f'Issue storing message: {json.dumps(message, indent=2)}')
             return
 
         timestamp = data["ts"].split(".")[0]

@@ -8,6 +8,16 @@ class QuotablePlugin(plugin.NoBotPlugin):
         with open(self._config.get('QUOTES_FILE'), 'r') as f:
             return json.load(f)
 
+    def __strip_quotes(self, snippet):
+        quote_mark_sets = [
+            ['"', '"'],
+            ['\u201c', '\u201d'],
+        ]
+        for (open_quote, close_quote) in quote_mark_sets:
+            if snippet.startswith(open_quote) and snippet.endswith(close_quote):
+                snippet = snippet.lstrip(quote_mark_set[0]).rstrip(quote_mark_set[1])
+        return snippet
+
     def __add_quote(self, quote):
         quotes = self.__read_quotes()
         dupe_quote = self.__check_for_dupe(quote, quotes)
@@ -15,19 +25,49 @@ class QuotablePlugin(plugin.NoBotPlugin):
             return dupe_quote
         else:
             [quote_text, attribution] = quote.split(' - ')
-            if quote_text.startswith('"') and quote_text.endswith('"'):
-                quote_text = quote_text.lstrip('"').rstrip('"')
-            elif quote_text.startswith('\u201c') and quote_text.endswith('\u201d'):
-                quote_text = quote_text.lstrip('\u201c').rstrip('\u201d')
-            if attribution.startswith('"') and attribution.endswith('"'):
-                attribution = attribution.lstrip('"').rstrip('"')
-            elif attribution.startswith('\u201c') and attribution.endswith('\u201d'):
-                attribution = attribution.lstrip('\u201c').rstrip('\u201d')
+            quote_text = __strip_quotes(quote_text)
+            attribution = __strip_quotes(attribution)
             quote = " - ".join([quote_text, attribution])
             quotes.append(quote)
             with open(self._config.get('QUOTES_FILE'), 'w') as f:
                 json.dump(quotes, f, indent=2)
             return
+
+    def __search_quotes(self, search_words, channel):
+        quotes = self.__read_quotes()
+        matches = {}
+        # Search through each of the quotes
+        for quote in quotes:
+            # Search for each of the words in the search string
+            for search_word in search_words:
+                # If we find it, keep a score of how many matches are in each quote
+                if search_word in quote.lower():
+                    if quote in matches.keys():
+                        matches[quote] += 1
+                    else:
+                        matches[quote] = 1
+        self._log.info(f'Matches: {json.dumps(matches, indent=2)}')
+
+        # Find the highest matching quote(s)
+        high_score = 0
+        num_winners = 0
+        winners = []
+        for quote in matches.keys():
+            if matches[quote] > high_score:
+                winners = [quote]
+                num_winners = 1
+                high_score = matches[quote]
+            elif matches[quote] == high_score:
+                winners.append(quote)
+                num_winners += 1
+
+        if winners:
+            self._log.info(f'Found {len(winners)} quotes')
+            seed()
+            winning_winner = winners[randint(0, 1000) % len(winners)]
+            return self.__get_quote_message(channel, winning_winner)
+        else:
+            return self.__build_message(f'Sorry, no results found for search string "{" ".join(search_words)}".', channel)
 
     def __get_quote(self, index=None):
         seed()
@@ -72,10 +112,13 @@ class QuotablePlugin(plugin.NoBotPlugin):
 
     def __show_usage(self, request):
         random_quote = self.__get_quote()
-        text = f"<@{request['user']}>, to add a quote to my database, your message must follow the format: `Moonbeam add-quote <quote> - <attribution>`" + \
-               f", eg. `Moonbeam add-quote {random_quote}`\n" + \
-               f"To retrieve a quote from my database by index, your message must follow the format: `Moonbeam quotable post <quote_index>`" + \
-               f", eg. `Moonbeam quotable post 13`"
+        text = f"I'm sorry <@{request['user']}>, I wasn't able to complete your request.\n" + \
+               "To add a quote to my database, your message must follow the format: `Moonbeam add-quote <quote> - <attribution>`\n" + \
+               f"For example: `Moonbeam add-quote {random_quote}`\n\n" + \
+               "To retrieve a quote from my database by index, your message must follow the format: `Moonbeam quotable post <quote_index>`\n" + \
+               "For example: `Moonbeam quotable post 13`\n\n" + \
+               "To search for a quote in my database, your message must follow the format: `Moonbeam quotable search <search_string>`\n" + \
+               "For example: `Moonbeam quotable search weasel`"
         return self.__build_message(text, request['channel'])
 
     def __add_success(self, request, quote, responses):
@@ -149,6 +192,30 @@ class QuotablePlugin(plugin.NoBotPlugin):
                     quote_index = int(words[index_index])
                     self._log.info(f'quote_index is {quote_index}')
                     responses.append(self.__get_quote_message(channel=channel, index=quote_index))
+                except Exception as e:
+                    self._log.exception(e)
+                    responses.append(self.__show_usage(request))
+        elif "quotable" in text.lower() and "search" in text.lower():
+            search_string_index = -1
+            word_index = -1
+            words = text.lower().split()
+            for word in words:
+                word_index += 1
+                if word == 'search':
+                    search_string_index = word_index+1
+                    break
+            if search_string_index >= 0:
+                self._log.info(f'search_string_index is {search_string_index}')
+                try:
+                    search_words = words[search_string_index:]
+                    self._log.info(f'search_words is {search_words}')
+                    quotes = self.__search_quotes(search_words=search_words, channel=channel)
+                    if isinstance(quotes, list):
+                        responses.extend(quotes)
+                    elif isinstance(quotes, dict):
+                        responses.append(quotes)
+                    else:
+                        responses.append(self.__show_usage(request))
                 except Exception as e:
                     self._log.exception(e)
                     responses.append(self.__show_usage(request))
