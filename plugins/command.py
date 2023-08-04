@@ -14,10 +14,11 @@ class CommandPlugin(plugin.NoBotPlugin):
                 request.get('user') == self._config.get("MASTER_ID")):
             command = request['text']
             self._log.info(f'Got potential command: {command}')
-            if len(command.split()) > 1 and command.split()[0].lower() == "moonbeam" and \
-                    command.split()[1].lower() == "post":
-                room_name = command.split()[2]
-                message = " ".join(command.split()[3:])
+            command_list = command.split()
+            if len(command_list) > 1 and command_list[0].lower() == "moonbeam" and \
+                    command_list[1].lower() == "post":
+                room_name = command_list[2]
+                message = command.replace(command_list[0], '').replace(command_list[1], '').replace(room_name, '')
                 responses.append(
                     {
                         'channel': room_name,
