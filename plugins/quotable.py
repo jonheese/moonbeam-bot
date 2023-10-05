@@ -25,8 +25,8 @@ class QuotablePlugin(plugin.NoBotPlugin):
             return dupe_quote
         else:
             [quote_text, attribution] = quote.split(' - ')
-            quote_text = __strip_quotes(quote_text)
-            attribution = __strip_quotes(attribution)
+            quote_text = self.__strip_quotes(quote_text)
+            attribution = self.__strip_quotes(attribution)
             quote = " - ".join([quote_text, attribution])
             quotes.append(quote)
             with open(self._config.get('QUOTES_FILE'), 'w') as f:
