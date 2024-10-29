@@ -2,7 +2,7 @@ FROM python:alpine
 WORKDIR /usr/src/app
 RUN set -eux \
     && apk add --no-cache --virtual .build-deps build-base \
-        libressl-dev libffi-dev gcc musl-dev python3-dev \
+        libffi-dev gcc musl-dev python3-dev \
         mariadb-dev mariadb-client tzdata \
     && pip install --upgrade pip setuptools wheel \
     && rm -rf /root/.cache/pip

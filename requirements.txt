@@ -5,12 +5,13 @@ feedparser==6.0.10
 Flask==2.3.2
 google-api-python-client==2.35.0
 markdownify==0.11.6
-mysql-connector-python==8.0.22
+mysql-connector-python==9.1.0
 pgeocode==0.3.0
 profanity==1.1
 pytz==2022.7.1
 pyzipcode==3.0.1
 requests==2.31.0
 simplejson==3.16.0
+six==1.16.0
 slackclient==2.9.3
 slack-sdk==3.19.5
