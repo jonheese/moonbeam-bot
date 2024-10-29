@@ -275,7 +275,7 @@ class WeatherPlugin(plugin.NoBotPlugin):
 
     def __get_zipcode(self, command):
         for token in command:
-            if re.search('\d{5}', token) and "." not in token:
+            if re.search(r'\d{5}', token) and "." not in token:
                 return token
         return '18104'
 

@@ -54,7 +54,7 @@ class DBStorePlugin(plugin.Plugin):
                     index += 1
             elif block['type'] == 'context':
                 for element in block.get('elements'):
-                    context += '\n' + re.sub('<!date\^[0-9]{10}\^{date_short}\ at\ {time}\|(.*)>', r'\1', element.get('text'))
+                    context += '\n' + re.sub(r'<!date\^[0-9]{10}\^{date_short}\ at\ {time}\|(.*)>', r'\1', element.get('text'))
         if choice_type == 'actions':
             choices = action_choices
         else:

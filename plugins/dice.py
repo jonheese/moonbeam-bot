@@ -47,7 +47,7 @@ class DicePlugin(plugin.NoBotPlugin):
             words = request['text'].lower().split()[1:]
             rude = False
             pleased = False
-            dice_pattern = re.compile("\d*d\d+(\+\d)*(-\d)*$")
+            dice_pattern = re.compile(r"\d*d\d+(\+\d)*(-\d)*$")
             dices = []
             for word in words:
                 if profanity.contains_profanity(word):
