@@ -3,3 +3,4 @@ config.json
 *.pyc
 *.swp
 env/
+prediction.txt

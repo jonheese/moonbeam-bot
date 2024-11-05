@@ -8,7 +8,7 @@ RUN set -eux \
     && rm -rf /root/.cache/pip
 COPY ./requirements.txt /usr/src/app/requirements.txt
 RUN set -eux\
-    && pip install -r /usr/src/app/requirements.txt \
+    && pip install --root-user-action=ignore -r /usr/src/app/requirements.txt \
     && rm -rf /root/.cache/pip
 COPY . /usr/src/app
 RUN rm -f /usr/src/app/words.json && rm -f /usr/src/app/quotes.json && rm -f /usr/src/app/perd.json

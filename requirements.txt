@@ -1,4 +1,5 @@
 aiocron==1.8
+apscheduler==3.9.1
 arrow==1.0.3
 beautifulsoup4==4.11.1
 feedparser==6.0.10

@@ -18,6 +18,9 @@ services:
       - type: bind
         source: ./perds.json
         target: /usr/src/app/perds.json
+      - type: bind
+        source: ./prediction.txt
+        target: /usr/src/app/prediction.txt
     ports:
       - "127.0.0.1:5002:5002"
     restart: always
