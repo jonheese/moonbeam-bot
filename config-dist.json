@@ -1,6 +1,7 @@
 {
     "Moonbeam": {
         "PLUGINS": [
+            "plugins.ai.AIPlugin",
             "plugins.archive.ArchivePlugin",
             "plugins.autoscoogle.AutoScooglePlugin",
             "plugins.command.CommandPlugin",
@@ -18,6 +19,10 @@
         ],
         "BOT_ID": "MOONBEAM_BOT_ID",
         "BOT_TOKEN": "xoxb-MOONBEAM_BOT_TOKEN"
+    },
+    "AIPlugin": {
+        "PAWAN_KRD_API_KEY": "your-api-key",
+        "PAWAN_KRD_API_HOST": "https://api.pawan.krd/v1/"
     },
     "CommandPlugin": {
         "OPEN_COMMAND": false,
